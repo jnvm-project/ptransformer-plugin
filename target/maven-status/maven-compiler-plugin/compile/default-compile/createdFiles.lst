@@ -1,0 +1,5 @@
+io\kbamponsem\maven\CleanPersistent.class
+io\kbamponsem\maven\PTransformer.class
+io\kbamponsem\maven\Util.class
+io\kbamponsem\maven\MyClassLoader.class
+io\kbamponsem\maven\AddPersistentMethod.class
