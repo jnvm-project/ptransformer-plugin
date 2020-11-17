@@ -68,15 +68,15 @@
           <description></description>
         </parameter>
         <parameter>
-          <name>pInterface</name>
-          <type>java.lang.String</type>
+          <name>project</name>
+          <type>org.apache.maven.project.MavenProject</type>
           <required>false</required>
           <editable>true</editable>
           <description></description>
         </parameter>
         <parameter>
-          <name>project</name>
-          <type>org.apache.maven.project.MavenProject</type>
+          <name>pSuperName</name>
+          <type>java.lang.String</type>
           <required>false</required>
           <editable>true</editable>
           <description></description>
@@ -85,8 +85,8 @@
       <configuration>
         <output implementation="java.lang.String">${output}</output>
         <persistent implementation="java.lang.String">${persistent}</persistent>
-        <pInterface implementation="java.lang.String">${pInterface}</pInterface>
         <project implementation="org.apache.maven.project.MavenProject">${project}</project>
+        <pSuperName implementation="java.lang.String">${pSuperName}</pSuperName>
       </configuration>
     </mojo>
   </mojos>

@@ -32,8 +32,8 @@ public class PTransformer extends AbstractMojo {
     @Parameter(property = "persistent")
     private String persistent;
 
-    @Parameter(property = "pInterface")
-    private String pInterface;
+    @Parameter(property = "pSuperName")
+    private String pSuperName;
 
 
     public void execute() throws MojoExecutionException, MojoFailureException {
@@ -85,7 +85,7 @@ public class PTransformer extends AbstractMojo {
                 if (aBoolean == true){
                     try {
                         String persistentClasspath = project.getBasedir()+ "/target/persistent/";
-                        byte[] bytes = transformClass(output+"\\", aClass, pInterface);
+                        byte[] bytes = transformClass(output+"\\", aClass, pSuperName);
 
                         String filename =  aClass.getSimpleName();
                         String packageName = aClass.getPackageName();
@@ -129,8 +129,8 @@ public class PTransformer extends AbstractMojo {
         ClassWriter classWriter = new ClassWriter(0);
         ClassReader classReader = new ClassReader(Files.readAllBytes(Paths.get(s).toAbsolutePath()));
         AddPersistentMethod persistentMethod = new AddPersistentMethod(classWriter);
-        TransformNonVolativeFields transformNonVolativeFields = new TransformNonVolativeFields(persistentMethod, pInterface);
-        classReader.accept(transformNonVolativeFields, 0);
+        TransformNonVolatileFields transformNonVolatileFields = new TransformNonVolatileFields(persistentMethod, pInterface);
+        classReader.accept(transformNonVolatileFields, 0);
         return classWriter.toByteArray();
     }
 

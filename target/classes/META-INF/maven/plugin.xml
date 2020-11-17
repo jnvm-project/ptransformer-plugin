@@ -63,7 +63,7 @@
           <description></description>
         </parameter>
         <parameter>
-          <name>pInterface</name>
+          <name>pSuperName</name>
           <type>java.lang.String</type>
           <required>false</required>
           <editable>true</editable>
@@ -86,7 +86,7 @@
       </parameters>
       <configuration>
         <output implementation="java.lang.String">${output}</output>
-        <pInterface implementation="java.lang.String">${pInterface}</pInterface>
+        <pSuperName implementation="java.lang.String">${pSuperName}</pSuperName>
         <persistent implementation="java.lang.String">${persistent}</persistent>
         <project implementation="org.apache.maven.project.MavenProject">${project}</project>
       </configuration>
