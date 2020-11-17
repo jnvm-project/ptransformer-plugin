@@ -90,8 +90,8 @@ public class TransformNonVolativeFields extends ClassVisitor {
         mv.visitCode();
         mv.visitVarInsn(Opcodes.ALOAD, 0);
         mv.visitInsn(Opcodes.LCONST_0);
-        mv.visitVarInsn(Opcodes.LDC, 6);
-        mv.visitMethodInsn(Opcodes.INVOKEINTERFACE, pInterface.replace("/", "."), "setIntFieldAt", "(JI)V", true);
+        mv.visitVarInsn(Opcodes.ILOAD, 1);
+        mv.visitMethodInsn(Opcodes.INVOKEINTERFACE, pInterface.replace("/", "."), "setIntFieldAt", "(J"+descriptor+ ")V", true);
         mv.visitInsn(Opcodes.RETURN);
         mv.visitMaxs(5, 5);
         mv.visitEnd();
