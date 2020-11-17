@@ -22,12 +22,23 @@ public class CleanPersistent extends AbstractMojo {
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
 
-       File pDir = new File(project.getBasedir()+"\\persistent");
+        File pDir = new File(project.getBasedir() + "/target/persistent");
 
-        for(String s : pDir.list()){
-            File currFile = new File(project.getBasedir()+"\\persistent",s);
-            currFile.delete();
+        deleteDir(pDir);
+        try {
+            Files.deleteIfExists(pDir.toPath());
+        } catch (IOException e) {
+            e.printStackTrace();
         }
+    }
 
+    public void deleteDir(File dir) {
+        File[] files = dir.listFiles();
+        if (files != null) {
+            for (final File file : files) {
+                deleteDir(file);
+            }
+        }
+        dir.delete();
     }
 }

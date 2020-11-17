@@ -32,6 +32,10 @@ public class PTransformer extends AbstractMojo {
     @Parameter(property = "persistent")
     private String persistent;
 
+    @Parameter(property = "pInterface")
+    private String pInterface;
+
+
     public void execute() throws MojoExecutionException, MojoFailureException {
         Vector<String> files = new Vector<>();
         HashMap<Class, Boolean> persistentClasses = new HashMap<>();
@@ -53,8 +57,6 @@ public class PTransformer extends AbstractMojo {
                 }
             });
 
-            getLog().info(files.toString());
-
             List<URL> pathUrls = new ArrayList<>();
             for (Object compilePath : project.getCompileClasspathElements()) {
                 String s = (String) compilePath;
@@ -62,8 +64,6 @@ public class PTransformer extends AbstractMojo {
             }
 
             URL[] urlsForClassLoader = pathUrls.toArray(new URL[pathUrls.size()]);
-
-            getLog().info("urls for URLClassLoader: " + Arrays.asList(urlsForClassLoader));
 
             ClassLoader classLoader = new URLClassLoader(urlsForClassLoader);
 
@@ -79,15 +79,17 @@ public class PTransformer extends AbstractMojo {
                 }
             });
 
-            getLog().info("BaseDir: "+ project.getBasedir().getAbsolutePath());
-
             Path pDir = Paths.get(project.getBasedir().getAbsolutePath() + "\\persistent");
             Files.createDirectories(pDir);
             persistentClasses.forEach((aClass, aBoolean) -> {
                 if (aBoolean == true){
                     try {
-                        byte[] bytes = transformClass(output+"\\", aClass);
-                        writeToPFolder(bytes, project.getBasedir()+"\\" +"persistent\\"+ aClass.getSimpleName().replace(".","\\")+".class");
+                        String persistentClasspath = project.getBasedir()+ "/target/persistent/";
+                        byte[] bytes = transformClass(output+"\\", aClass, pInterface);
+
+                        String filename =  aClass.getSimpleName();
+                        String packageName = aClass.getPackageName();
+                        writeBytes(persistentClasspath, packageName, filename, ".class", bytes );
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
@@ -120,26 +122,37 @@ public class PTransformer extends AbstractMojo {
         return false;
     }
 
-    static byte[] transformClass(String classpath, Class c) throws IOException {
+    static byte[] transformClass(String classpath, Class c, String pInterface) throws IOException {
+
         String s = classpath+ c.getName().replace(".","\\")+".class";
         System.out.println(classpath+ c.getName().replace(".","\\")+".class");
         ClassWriter classWriter = new ClassWriter(0);
         ClassReader classReader = new ClassReader(Files.readAllBytes(Paths.get(s).toAbsolutePath()));
         AddPersistentMethod persistentMethod = new AddPersistentMethod(classWriter);
-        classReader.accept(persistentMethod, 0);
+        TransformNonVolativeFields transformNonVolativeFields = new TransformNonVolativeFields(persistentMethod, pInterface);
+        classReader.accept(transformNonVolativeFields, 0);
         return classWriter.toByteArray();
     }
 
-    static void writeToPFolder(byte[] b, String outputDirectory) {
-        System.out.println("POut: "+outputDirectory);
-        FileOutputStream fileOutputStream;
+    static void writeBytes(String classpath,String packageName, String fileName, String extension, byte[] b) {
+        FileOutputStream fileOutputStream = null;
+        File fileWithDir;
         try {
-            fileOutputStream = new FileOutputStream(outputDirectory);
+            fileWithDir = new File(classpath.concat(packageName));
+
+            Files.createDirectories(fileWithDir.toPath());
+
+            System.out.println("PackageName: "+ packageName);
+            fileOutputStream = new FileOutputStream(classpath+packageName+"/"+fileName+extension);
             fileOutputStream.write(b);
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
+        } finally {
+            try {
+                fileOutputStream.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
     }
 }
