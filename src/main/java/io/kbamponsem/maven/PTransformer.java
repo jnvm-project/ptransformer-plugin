@@ -79,17 +79,20 @@ public class PTransformer extends AbstractMojo {
                 }
             });
 
-            Path pDir = Paths.get(project.getBasedir().getAbsolutePath() + "\\persistent");
-            Files.createDirectories(pDir);
-            persistentClasses.forEach((aClass, aBoolean) -> {
-                if (aBoolean == true){
-                    try {
-                        String persistentClasspath = project.getBasedir()+ "/target/persistent/";
-                        byte[] bytes = transformClass(output+"\\", aClass, pSuperName);
 
-                        String filename =  aClass.getSimpleName();
+            getLog().info("-------------------------------------------------------------");
+            getLog().info("Persistent classes: " + persistentClasses.size());
+            getLog().info("-------------------------------------------------------------");
+
+            persistentClasses.forEach((aClass, aBoolean) -> {
+                if (aBoolean == true) {
+                    try {
+                        String persistentClasspath = project.getBasedir() + "/target/persistent/";
+                        byte[] bytes = transformClass(output + "\\", aClass, pSuperName);
+
+                        String filename = aClass.getSimpleName();
                         String packageName = aClass.getPackageName();
-                        writeBytes(persistentClasspath, packageName, filename, ".class", bytes );
+                        writeBytes(persistentClasspath, packageName, filename, ".class", bytes);
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
@@ -122,19 +125,18 @@ public class PTransformer extends AbstractMojo {
         return false;
     }
 
-    static byte[] transformClass(String classpath, Class c, String pInterface) throws IOException {
-
-        String s = classpath+ c.getName().replace(".","\\")+".class";
-        System.out.println(classpath+ c.getName().replace(".","\\")+".class");
+    static byte[] transformClass(String classpath, Class c, String pSuperName) throws IOException {
+        String s = classpath + c.getName().replace(".", "\\") + ".class";
         ClassWriter classWriter = new ClassWriter(0);
         ClassReader classReader = new ClassReader(Files.readAllBytes(Paths.get(s).toAbsolutePath()));
         AddPersistentMethod persistentMethod = new AddPersistentMethod(classWriter);
-        TransformNonVolatileFields transformNonVolatileFields = new TransformNonVolatileFields(persistentMethod, pInterface);
+        AddSuperCall addSuperCall = new AddSuperCall(persistentMethod, pSuperName);
+        TransformNonVolatileFields transformNonVolatileFields = new TransformNonVolatileFields(addSuperCall, pSuperName);
         classReader.accept(transformNonVolatileFields, 0);
         return classWriter.toByteArray();
     }
 
-    static void writeBytes(String classpath,String packageName, String fileName, String extension, byte[] b) {
+    static void writeBytes(String classpath, String packageName, String fileName, String extension, byte[] b) {
         FileOutputStream fileOutputStream = null;
         File fileWithDir;
         try {
@@ -142,8 +144,7 @@ public class PTransformer extends AbstractMojo {
 
             Files.createDirectories(fileWithDir.toPath());
 
-            System.out.println("PackageName: "+ packageName);
-            fileOutputStream = new FileOutputStream(classpath+packageName+"/"+fileName+extension);
+            fileOutputStream = new FileOutputStream(classpath + packageName + "/" + fileName + extension);
             fileOutputStream.write(b);
         } catch (IOException e) {
             e.printStackTrace();

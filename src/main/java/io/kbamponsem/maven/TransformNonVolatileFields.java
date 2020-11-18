@@ -59,10 +59,12 @@ public class TransformNonVolatileFields extends ClassVisitor {
         this.nonTransientFields.forEach((x, y)->{
             nonTransients.add(x);
         });
+
         mv = cv.visitMethod(access, name, descriptor, signature, exceptions);
-        if(mv != null & !name.contains("<init>")){
+        if(mv != null){
             mv = new FieldAccessMethodTransformer(mv, nonTransients);
         }
+
         return mv;
     }
 
