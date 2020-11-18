@@ -16,7 +16,6 @@ import java.lang.annotation.Annotation;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
 
@@ -129,9 +128,11 @@ public class PTransformer extends AbstractMojo {
         String s = classpath + c.getName().replace(".", "\\") + ".class";
         ClassWriter classWriter = new ClassWriter(0);
         ClassReader classReader = new ClassReader(Files.readAllBytes(Paths.get(s).toAbsolutePath()));
-        AddPersistentMethod persistentMethod = new AddPersistentMethod(classWriter);
-        AddSuperCall addSuperCall = new AddSuperCall(persistentMethod, pSuperName);
-        TransformNonVolatileFields transformNonVolatileFields = new TransformNonVolatileFields(addSuperCall, pSuperName);
+        AddSizeMethod persistentMethod = new AddSizeMethod(classWriter, c.getName());
+        AddSizeField addSizeField = new AddSizeField(persistentMethod, 32);
+        AddSuperCall addSuperCall = new AddSuperCall(addSizeField, pSuperName);
+        AddEqualMethod addEqualMethod = new AddEqualMethod(addSuperCall);
+        TransformNonVolatileFields transformNonVolatileFields = new TransformNonVolatileFields(addEqualMethod, pSuperName);
         classReader.accept(transformNonVolatileFields, 0);
         return classWriter.toByteArray();
     }

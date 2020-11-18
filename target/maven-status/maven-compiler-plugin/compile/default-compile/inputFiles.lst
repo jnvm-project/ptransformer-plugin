@@ -1,7 +1,9 @@
+C:\Users\kbamponsem\IdeaProjects\ptransformer\src\main\java\io\kbamponsem\maven\AddEqualMethod.java
 C:\Users\kbamponsem\IdeaProjects\ptransformer\src\main\java\io\kbamponsem\maven\TransformNonVolatileFields.java
+C:\Users\kbamponsem\IdeaProjects\ptransformer\src\main\java\io\kbamponsem\maven\AddSizeMethod.java
 C:\Users\kbamponsem\IdeaProjects\ptransformer\src\main\java\io\kbamponsem\maven\PTransformer.java
+C:\Users\kbamponsem\IdeaProjects\ptransformer\src\main\java\io\kbamponsem\maven\AddSizeField.java
 C:\Users\kbamponsem\IdeaProjects\ptransformer\src\main\java\io\kbamponsem\maven\AddSuperCall.java
 C:\Users\kbamponsem\IdeaProjects\ptransformer\src\main\java\io\kbamponsem\maven\CleanPersistent.java
 C:\Users\kbamponsem\IdeaProjects\ptransformer\src\main\java\io\kbamponsem\maven\FieldAccessMethodTransformer.java
 C:\Users\kbamponsem\IdeaProjects\ptransformer\src\main\java\io\kbamponsem\maven\MyClassLoader.java
-C:\Users\kbamponsem\IdeaProjects\ptransformer\src\main\java\io\kbamponsem\maven\AddPersistentMethod.java
