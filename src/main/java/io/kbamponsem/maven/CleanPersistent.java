@@ -32,7 +32,7 @@ public class CleanPersistent extends AbstractMojo {
         }
     }
 
-    public void deleteDir(File dir) {
+    static public void deleteDir(File dir) {
         File[] files = dir.listFiles();
         if (files != null) {
             for (final File file : files) {

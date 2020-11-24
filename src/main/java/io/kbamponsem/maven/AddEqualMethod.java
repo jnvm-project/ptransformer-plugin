@@ -13,18 +13,24 @@ public class AddEqualMethod extends ClassVisitor {
     @Override
     public void visitEnd() {
         MethodVisitor mv = cv.visitMethod(Opcodes.ACC_PUBLIC, "equals", "(Ljava/lang/Object;)Z", null, null);
-        Label label = new Label();
+        Label TRUE = new Label();
+        Label END = new Label();
+        Label FALSE = new Label();
 
         if(mv != null){
             mv.visitCode();
             mv.visitVarInsn(Opcodes.ALOAD, 0);
             mv.visitVarInsn(Opcodes.ALOAD, 1);
-            mv.visitJumpInsn(Opcodes.IF_ACMPNE, label);
+            mv.visitJumpInsn(Opcodes.IF_ACMPNE, FALSE);
+
+            mv.visitLabel(TRUE);
             mv.visitInsn(Opcodes.ICONST_1);
             mv.visitInsn(Opcodes.IRETURN);
-            mv.visitLabel(label);
+
+            mv.visitLabel(FALSE);
             mv.visitInsn(Opcodes.ICONST_0);
             mv.visitInsn(Opcodes.IRETURN);
+
         }
         super.visitEnd();
     }

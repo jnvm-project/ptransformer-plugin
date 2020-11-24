@@ -28,8 +28,8 @@ public class PTransformer extends AbstractMojo {
     @Parameter(property = "project")
     private MavenProject project;
 
-    @Parameter(property = "persistent")
-    private String persistent;
+    @Parameter(property = "persistentAnnotation")
+    private String persistentAnnotation;
 
     @Parameter(property = "pSuperName")
     private String pSuperName;
@@ -70,7 +70,7 @@ public class PTransformer extends AbstractMojo {
                 try {
                     Class c = classLoader.loadClass(x);
 
-                    if (isPersistence(c, persistent)) {
+                    if (isPersistence(c, persistentAnnotation)) {
                         persistentClasses.put(c, true);
                     }
                 } catch (ClassNotFoundException e) {
@@ -87,7 +87,7 @@ public class PTransformer extends AbstractMojo {
                 if (aBoolean == true) {
                     try {
                         String persistentClasspath = project.getBasedir() + "/target/persistent/";
-                        byte[] bytes = transformClass(output + "\\", aClass, pSuperName);
+                        byte[] bytes = transformClass(output + "/", aClass, pSuperName);
 
                         String filename = aClass.getSimpleName();
                         String packageName = aClass.getPackageName();
@@ -98,6 +98,10 @@ public class PTransformer extends AbstractMojo {
                 }
             });
 
+            // Delete old classes folder.
+            CleanPersistent.deleteDir(new File(project.getBasedir().getAbsolutePath(), "/target/classes"));
+
+            // Though cleaned, after building it replaces it since it is the classpath.
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -125,7 +129,7 @@ public class PTransformer extends AbstractMojo {
     }
 
     static byte[] transformClass(String classpath, Class c, String pSuperName) throws IOException {
-        String s = classpath + c.getName().replace(".", "\\") + ".class";
+        String s = classpath + c.getName().replace(".", "/") + ".class";
         ClassWriter classWriter = new ClassWriter(0);
         ClassReader classReader = new ClassReader(Files.readAllBytes(Paths.get(s).toAbsolutePath()));
         AddSizeMethod persistentMethod = new AddSizeMethod(classWriter, c.getName());
