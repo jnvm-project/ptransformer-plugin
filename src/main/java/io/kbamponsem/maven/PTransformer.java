@@ -1,5 +1,7 @@
 package io.kbamponsem.maven;
 
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.filefilter.TrueFileFilter;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
@@ -19,7 +21,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.*;
 
-@Mojo(name = "transform-classes", defaultPhase = LifecyclePhase.COMPILE, threadSafe = true, requiresDependencyResolution = ResolutionScope.COMPILE)
+@Mojo(name = "transform-classes", defaultPhase = LifecyclePhase.COMPILE, threadSafe = true, requiresDependencyResolution = ResolutionScope.COMPILE_PLUS_RUNTIME)
 public class PTransformer extends AbstractMojo {
 
     @Parameter(property = "output", required = true)
@@ -35,29 +37,22 @@ public class PTransformer extends AbstractMojo {
     private String pSuperName;
 
 
+
     public void execute() throws MojoExecutionException, MojoFailureException {
         Vector<String> files = new Vector<>();
         HashMap<Class, Boolean> persistentClasses = new HashMap<>();
         try {
             File oDir = new File(output);
             getLog().info("Root: " + output);
-            Arrays.stream(oDir.listFiles()).forEach(file -> {
-                String s2 = changeBackSlashToForwardSlash(oDir.getAbsolutePath() + "/");
-                if (file.isDirectory()) {
-                    Arrays.stream(file.listFiles()).forEach(file1 -> {
-                        String s1 = changeBackSlashToForwardSlash(file1.getAbsolutePath());
-                        s1 = removeDotClass(s1.split(s2)[1]);
-                        files.add(changeForwardSlashToDot(s1));
-                    });
-                } else {
-                    String s1 = changeBackSlashToForwardSlash(file.getAbsolutePath());
-                    s1 = removeDotClass(s1.split(s2)[1]);
-                    files.add(changeForwardSlashToDot(s1));
-                }
+
+            FileUtils.listFiles(oDir, TrueFileFilter.INSTANCE, TrueFileFilter.TRUE).forEach(x -> {
+                files.add(transformClassFiles(x, oDir));
             });
 
+            URL[] urls = new URL[]{Paths.get(output).toUri().toURL()};
+
             List<URL> pathUrls = new ArrayList<>();
-            for (Object compilePath : project.getCompileClasspathElements()) {
+            for (Object compilePath : project.getRuntimeClasspathElements()) {
                 String s = (String) compilePath;
                 pathUrls.add(new File(s).toURI().toURL());
             }
@@ -68,6 +63,7 @@ public class PTransformer extends AbstractMojo {
 
             files.forEach(x -> {
                 try {
+
                     Class c = classLoader.loadClass(x);
 
                     if (isPersistence(c, persistentAnnotation)) {
@@ -90,7 +86,9 @@ public class PTransformer extends AbstractMojo {
                         byte[] bytes = transformClass(output + "/", aClass, pSuperName);
 
                         String filename = aClass.getSimpleName();
-                        String packageName = aClass.getPackageName();
+
+
+                        String packageName = aClass.getPackage().getName();
                         writeBytes(persistentClasspath, packageName, filename, ".class", bytes);
                     } catch (IOException e) {
                         e.printStackTrace();
@@ -106,12 +104,19 @@ public class PTransformer extends AbstractMojo {
             e.printStackTrace();
         }
     }
+    static String transformClassFiles(File file, File parentDirectory) {
+        String fileName = file.getAbsolutePath();
+        String directoryName = parentDirectory.getAbsolutePath();
 
+        fileName = fileName.split(directoryName + "/")[1];
+
+        return changeForwardSlashToDot(removeDotClass(fileName));
+    }
     static String removeDotClass(String s) {
         return s.split(".class")[0];
     }
 
-    static String changeBackSlashToForwardSlash(String s) {
+    static String changeFromDotToSlash(String s) {
         return s.replace("\\", "/");
     }
 
