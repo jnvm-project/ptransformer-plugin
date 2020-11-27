@@ -143,7 +143,7 @@ public class PTransformer extends AbstractMojo {
         AddSizeMethod persistentMethod = new AddSizeMethod(classWriter, c.getName());
 
 
-        AddSizeField addSizeField = new AddSizeField(persistentMethod,size);
+        AddSizeField addSizeField = new AddSizeField(persistentMethod, size);
         AddSuperCall addSuperCall = new AddSuperCall(addSizeField, pSuperName);
         AddEqualMethod addEqualMethod = new AddEqualMethod(addSuperCall);
         TransformNonVolatileFields transformNonVolatileFields = new TransformNonVolatileFields(addEqualMethod, pSuperName);
@@ -175,15 +175,23 @@ public class PTransformer extends AbstractMojo {
     static long getSizeOfFields(Class c) {
         int size = 0;
         for (Field f : c.getDeclaredFields()) {
-            System.out.println(f.getType().getSimpleName());
             if (f.getType().getSimpleName().compareTo("int") == 0) {
                 size += Integer.BYTES;
-            } else if (f.getType().getSimpleName() == "float")
-                size += Float.BYTES;
-            else if (f.getType().getSimpleName() == "char")
+            } else if (f.getType().getSimpleName() == "short") {
+                size += Short.BYTES;
+            } else if (f.getType().getSimpleName() == "char") {
                 size += Character.BYTES;
-            else if (f.getType().getSimpleName() == "float")
+            } else if (f.getType().getSimpleName() == "float") {
                 size += Float.BYTES;
+            } else if (f.getType().getSimpleName() == "double") {
+                size += Double.BYTES;
+            } else if (f.getType().getSimpleName() == "long") {
+                size += Long.BYTES;
+            } else if (f.getType().getSimpleName() == "byte") {
+                size += Byte.BYTES;
+            } else {
+                size += 0;
+            }
         }
 
         return size;
