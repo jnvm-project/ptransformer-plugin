@@ -13,6 +13,7 @@ public class AddSizeField extends ClassVisitor {
 
     @Override
     public void visitEnd() {
+        System.out.println(SIZE);
         cv.visitField(Opcodes.ACC_FINAL | Opcodes.ACC_PRIVATE | Opcodes.ACC_STATIC, "SIZE", "J", null, this.SIZE);
 
         super.visitEnd();

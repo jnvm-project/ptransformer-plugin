@@ -15,6 +15,7 @@ import org.objectweb.asm.ClassWriter;
 
 import java.io.*;
 import java.lang.annotation.Annotation;
+import java.lang.reflect.Field;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.file.Files;
@@ -35,7 +36,6 @@ public class PTransformer extends AbstractMojo {
 
     @Parameter(property = "pSuperName")
     private String pSuperName;
-
 
 
     public void execute() throws MojoExecutionException, MojoFailureException {
@@ -104,6 +104,7 @@ public class PTransformer extends AbstractMojo {
             e.printStackTrace();
         }
     }
+
     static String transformClassFiles(File file, File parentDirectory) {
         String fileName = file.getAbsolutePath();
         String directoryName = parentDirectory.getAbsolutePath();
@@ -112,6 +113,7 @@ public class PTransformer extends AbstractMojo {
 
         return changeForwardSlashToDot(removeDotClass(fileName));
     }
+
     static String removeDotClass(String s) {
         return s.split(".class")[0];
     }
@@ -134,11 +136,14 @@ public class PTransformer extends AbstractMojo {
     }
 
     static byte[] transformClass(String classpath, Class c, String pSuperName) throws IOException {
+        long size = getSizeOfFields(c);
         String s = classpath + c.getName().replace(".", "/") + ".class";
         ClassWriter classWriter = new ClassWriter(0);
         ClassReader classReader = new ClassReader(Files.readAllBytes(Paths.get(s).toAbsolutePath()));
         AddSizeMethod persistentMethod = new AddSizeMethod(classWriter, c.getName());
-        AddSizeField addSizeField = new AddSizeField(persistentMethod, 32);
+
+
+        AddSizeField addSizeField = new AddSizeField(persistentMethod,size);
         AddSuperCall addSuperCall = new AddSuperCall(addSizeField, pSuperName);
         AddEqualMethod addEqualMethod = new AddEqualMethod(addSuperCall);
         TransformNonVolatileFields transformNonVolatileFields = new TransformNonVolatileFields(addEqualMethod, pSuperName);
@@ -165,5 +170,22 @@ public class PTransformer extends AbstractMojo {
                 e.printStackTrace();
             }
         }
+    }
+
+    static long getSizeOfFields(Class c) {
+        int size = 0;
+        for (Field f : c.getDeclaredFields()) {
+            System.out.println(f.getType().getSimpleName());
+            if (f.getType().getSimpleName().compareTo("int") == 0) {
+                size += Integer.BYTES;
+            } else if (f.getType().getSimpleName() == "float")
+                size += Float.BYTES;
+            else if (f.getType().getSimpleName() == "char")
+                size += Character.BYTES;
+            else if (f.getType().getSimpleName() == "float")
+                size += Float.BYTES;
+        }
+
+        return size;
     }
 }
