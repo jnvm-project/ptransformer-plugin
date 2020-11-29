@@ -1,5 +1,6 @@
 package io.kbamponsem.maven;
 
+import io.kbamponsem.maven.util.Functions;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.FieldVisitor;
 import org.objectweb.asm.MethodVisitor;
@@ -99,12 +100,14 @@ public class TransformNonVolatileFields extends ClassVisitor {
     }
 
     void createSetter(String name, String descriptor, ClassVisitor cv, long offset) {
+        name = Functions.capitalize(name);
+
         MethodVisitor mv =
-                cv.visitMethod(Opcodes.ACC_PUBLIC, "$set" + name.toUpperCase(), "(" + descriptor + ")V", null, null);
+                cv.visitMethod(Opcodes.ACC_PUBLIC, "$set" + name, "(" + descriptor + ")V", null, null);
         mv.visitCode();
         mv.visitVarInsn(Opcodes.ALOAD, 0);
         mv.visitLdcInsn(offset);
-        mv.visitVarInsn(Opcodes.ILOAD, 1);
+        mv.visitVarInsn(Functions.getDescOpcode(descriptor), 1);
         mv.visitMethodInsn(Opcodes.INVOKEINTERFACE, pInterface.replace("/", "."), "setIntFieldAt", "(J"+descriptor+ ")V", true);
         mv.visitInsn(Opcodes.RETURN);
         mv.visitMaxs(5, 5);
@@ -113,8 +116,9 @@ public class TransformNonVolatileFields extends ClassVisitor {
     }
 
     void createGetter(String name, String descriptor, ClassVisitor cv, long offset) {
+        name = Functions.capitalize(name);
         MethodVisitor mv =
-                cv.visitMethod(Opcodes.ACC_PUBLIC, "$get" + name.toUpperCase(), "()" + descriptor, null, null);
+                cv.visitMethod(Opcodes.ACC_PUBLIC, "$get" + name, "()" + descriptor, null, null);
         mv.visitCode();
         mv.visitVarInsn(Opcodes.ALOAD, 0);
         mv.visitLdcInsn(offset);
