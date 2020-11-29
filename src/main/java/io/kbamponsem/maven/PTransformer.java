@@ -1,5 +1,6 @@
 package io.kbamponsem.maven;
 
+import io.kbamponsem.maven.util.Functions;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.filefilter.TrueFileFilter;
 import org.apache.maven.plugin.AbstractMojo;
@@ -48,18 +49,16 @@ public class PTransformer extends AbstractMojo {
             FileUtils.listFiles(oDir, TrueFileFilter.INSTANCE, TrueFileFilter.TRUE).forEach(x -> {
                 files.add(transformClassFiles(x, oDir));
             });
+//
+//            List<URL> pathUrls = new ArrayList<>();
+//            for (Object compilePath : project.getRuntimeClasspathElements()) {
+//                String s = (String) compilePath;
+//                pathUrls.add(new File(s).toURI().toURL());
+//            }
+//
+//            URL[] urlsForClassLoader = pathUrls.toArray(new URL[pathUrls.size()]);
 
-            URL[] urls = new URL[]{Paths.get(output).toUri().toURL()};
-
-            List<URL> pathUrls = new ArrayList<>();
-            for (Object compilePath : project.getRuntimeClasspathElements()) {
-                String s = (String) compilePath;
-                pathUrls.add(new File(s).toURI().toURL());
-            }
-
-            URL[] urlsForClassLoader = pathUrls.toArray(new URL[pathUrls.size()]);
-
-            ClassLoader classLoader = new URLClassLoader(urlsForClassLoader);
+            ClassLoader classLoader = Functions.getProjectClassLoader(project);
 
             files.forEach(x -> {
                 try {
@@ -83,7 +82,7 @@ public class PTransformer extends AbstractMojo {
                 if (aBoolean == true) {
                     try {
                         String persistentClasspath = project.getBasedir() + "/target/persistent/";
-                        byte[] bytes = transformClass(output + "/", aClass, pSuperName);
+                        byte[] bytes = transformClass(output + "/", aClass, pSuperName, project);
 
                         String filename = aClass.getSimpleName();
 
@@ -135,18 +134,17 @@ public class PTransformer extends AbstractMojo {
         return false;
     }
 
-    static byte[] transformClass(String classpath, Class c, String pSuperName) throws IOException {
+    static byte[] transformClass(String classpath, Class c, String pSuperName, MavenProject project) throws IOException {
+        ClassLoader classLoader = Functions.getProjectClassLoader(project);
         long size = getSizeOfFields(c);
         String s = classpath + c.getName().replace(".", "/") + ".class";
         ClassWriter classWriter = new ClassWriter(0);
         ClassReader classReader = new ClassReader(Files.readAllBytes(Paths.get(s).toAbsolutePath()));
         AddSizeMethod persistentMethod = new AddSizeMethod(classWriter, c.getName());
-
-
         AddSizeField addSizeField = new AddSizeField(persistentMethod, size);
         AddSuperCall addSuperCall = new AddSuperCall(addSizeField, pSuperName);
         AddEqualMethod addEqualMethod = new AddEqualMethod(addSuperCall, c);
-        TransformNonVolatileFields transformNonVolatileFields = new TransformNonVolatileFields(addEqualMethod, pSuperName);
+        TransformNonVolatileFields transformNonVolatileFields = new TransformNonVolatileFields(addEqualMethod, pSuperName, classLoader);
         classReader.accept(transformNonVolatileFields, 0);
         return classWriter.toByteArray();
     }

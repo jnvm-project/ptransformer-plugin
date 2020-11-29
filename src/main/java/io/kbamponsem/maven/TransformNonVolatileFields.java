@@ -6,6 +6,7 @@ import org.objectweb.asm.FieldVisitor;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 
+import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Vector;
@@ -16,6 +17,7 @@ import java.util.Vector;
  */
 public class TransformNonVolatileFields extends ClassVisitor {
 
+    ClassLoader classLoader;
     HashMap<String, String> nonTransientFields = new HashMap<>();
     String pInterface;
     int version;
@@ -26,9 +28,10 @@ public class TransformNonVolatileFields extends ClassVisitor {
     String descriptor;
     String[] interfaces, exceptions;
 
-    public TransformNonVolatileFields(ClassVisitor classVisitor, String pInterface) {
+    public TransformNonVolatileFields(ClassVisitor classVisitor, String pInterface, ClassLoader classLoader) {
         super(Opcodes.ASM8, classVisitor);
         this.pInterface = pInterface;
+        this.classLoader = classLoader;
     }
 
     @Override
@@ -57,12 +60,12 @@ public class TransformNonVolatileFields extends ClassVisitor {
         MethodVisitor mv;
         Vector<String> nonTransients = new Vector<>();
 
-        this.nonTransientFields.forEach((x, y)->{
+        this.nonTransientFields.forEach((x, y) -> {
             nonTransients.add(x);
         });
 
         mv = cv.visitMethod(access, name, descriptor, signature, exceptions);
-        if(mv != null){
+        if (mv != null) {
             mv = new FieldAccessMethodTransformer(mv, nonTransients);
         }
 
@@ -85,6 +88,7 @@ public class TransformNonVolatileFields extends ClassVisitor {
 
     /**
      * The required interface is added to the class c
+     *
      * @param cv
      */
     void addInterface(ClassVisitor cv) {
@@ -96,35 +100,49 @@ public class TransformNonVolatileFields extends ClassVisitor {
     }
 
     void addSuperName(ClassVisitor cv) {
-        cv.visit(this.version, this.access, this.name, this.signature,this.pInterface.replace("/", "."), this.interfaces);
+        cv.visit(this.version, this.access, this.name, this.signature, this.pInterface.replace("/", "."), this.interfaces);
     }
 
     void createSetter(String name, String descriptor, ClassVisitor cv, long offset) {
-        name = Functions.capitalize(name);
+        try {
+            Class superClass = this.classLoader.loadClass(this.pInterface);
+            Method[] superClassMethods = superClass.getDeclaredMethods();
+            String methodName = Functions.getMethodFromName(superClassMethods, Functions.getTypeFromDesc(descriptor), "set").getName();
+            name = Functions.capitalize(name);
+            MethodVisitor mv =
+                    cv.visitMethod(Opcodes.ACC_PUBLIC, "$set" + name, "(" + descriptor + ")V", null, null);
+            mv.visitCode();
+            mv.visitVarInsn(Opcodes.ALOAD, 0);
+            mv.visitLdcInsn(offset);
+            mv.visitVarInsn(Functions.getDescOpcode(descriptor), 1);
+            mv.visitMethodInsn(Opcodes.INVOKEINTERFACE, pInterface.replace("/", "."), methodName, "(J" + descriptor + ")V", true);
+            mv.visitInsn(Opcodes.RETURN);
+            mv.visitMaxs(5, 5);
+            mv.visitEnd();
+        } catch (Exception e) {
 
-        MethodVisitor mv =
-                cv.visitMethod(Opcodes.ACC_PUBLIC, "$set" + name, "(" + descriptor + ")V", null, null);
-        mv.visitCode();
-        mv.visitVarInsn(Opcodes.ALOAD, 0);
-        mv.visitLdcInsn(offset);
-        mv.visitVarInsn(Functions.getDescOpcode(descriptor), 1);
-        mv.visitMethodInsn(Opcodes.INVOKEINTERFACE, pInterface.replace("/", "."), "setIntFieldAt", "(J"+descriptor+ ")V", true);
-        mv.visitInsn(Opcodes.RETURN);
-        mv.visitMaxs(5, 5);
-        mv.visitEnd();
-
+        }
     }
 
     void createGetter(String name, String descriptor, ClassVisitor cv, long offset) {
-        name = Functions.capitalize(name);
-        MethodVisitor mv =
-                cv.visitMethod(Opcodes.ACC_PUBLIC, "$get" + name, "()" + descriptor, null, null);
-        mv.visitCode();
-        mv.visitVarInsn(Opcodes.ALOAD, 0);
-        mv.visitLdcInsn(offset);
-        mv.visitMethodInsn(Opcodes.INVOKEINTERFACE, pInterface.replace("/", "."), "getIntFieldAt", "(J)I", true);
-        mv.visitInsn(Opcodes.IRETURN);
-        mv.visitMaxs(5, 5);
-        mv.visitEnd();
+        try{
+
+            Class superClass = this.classLoader.loadClass(this.pInterface);
+            Method[] superClassMethods = superClass.getDeclaredMethods();
+            String methodName = Functions.getMethodFromName(superClassMethods, Functions.getTypeFromDesc(descriptor), "get").getName();
+            name = Functions.capitalize(name);
+            MethodVisitor mv =
+                    cv.visitMethod(Opcodes.ACC_PUBLIC, "$get" + name, "()" + descriptor, null, null);
+            mv.visitCode();
+            mv.visitVarInsn(Opcodes.ALOAD, 0);
+            mv.visitLdcInsn(offset);
+            mv.visitMethodInsn(Opcodes.INVOKEINTERFACE, pInterface.replace("/", "."), methodName, "(J)I", true);
+            mv.visitInsn(Opcodes.IRETURN);
+            mv.visitMaxs(5, 5);
+            mv.visitEnd();
+
+        }catch (Exception e){
+
+        }
     }
 }
