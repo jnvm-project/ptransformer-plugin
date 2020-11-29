@@ -27,6 +27,7 @@ public class TransformNonVolatileFields extends ClassVisitor {
     String superName;
     String descriptor;
     String[] interfaces, exceptions;
+    final String[] getSetType = new String[] {"get", "set"};
 
     public TransformNonVolatileFields(ClassVisitor classVisitor, String pInterface, ClassLoader classLoader) {
         super(Opcodes.ASM8, classVisitor);
@@ -107,7 +108,7 @@ public class TransformNonVolatileFields extends ClassVisitor {
         try {
             Class superClass = this.classLoader.loadClass(this.pInterface);
             Method[] superClassMethods = superClass.getDeclaredMethods();
-            String methodName = Functions.getMethodFromName(superClassMethods, Functions.getTypeFromDesc(descriptor), "set").getName();
+            String methodName = Functions.getMethodFromName(superClassMethods, Functions.getTypeFromDesc(descriptor), getSetType[1]).getName();
             name = Functions.capitalize(name);
             MethodVisitor mv =
                     cv.visitMethod(Opcodes.ACC_PUBLIC, "$set" + name, "(" + descriptor + ")V", null, null);
@@ -129,14 +130,14 @@ public class TransformNonVolatileFields extends ClassVisitor {
 
             Class superClass = this.classLoader.loadClass(this.pInterface);
             Method[] superClassMethods = superClass.getDeclaredMethods();
-            String methodName = Functions.getMethodFromName(superClassMethods, Functions.getTypeFromDesc(descriptor), "get").getName();
+            String methodName = Functions.getMethodFromName(superClassMethods, Functions.getTypeFromDesc(descriptor), getSetType[0]).getName();
             name = Functions.capitalize(name);
             MethodVisitor mv =
                     cv.visitMethod(Opcodes.ACC_PUBLIC, "$get" + name, "()" + descriptor, null, null);
             mv.visitCode();
             mv.visitVarInsn(Opcodes.ALOAD, 0);
             mv.visitLdcInsn(offset);
-            mv.visitMethodInsn(Opcodes.INVOKEINTERFACE, pInterface.replace("/", "."), methodName, "(J)I", true);
+            mv.visitMethodInsn(Opcodes.INVOKEINTERFACE, pInterface.replace("/", "."), methodName, "(J)"+descriptor, true);
             mv.visitInsn(Opcodes.IRETURN);
             mv.visitMaxs(5, 5);
             mv.visitEnd();
