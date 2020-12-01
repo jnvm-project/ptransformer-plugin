@@ -12,7 +12,7 @@ import java.util.HashMap;
 import java.util.Vector;
 
 /**
- * This class looks for the non-transient fields and then it creates getters and setters
+ * This class looks for the non-transient fields and then creates getters and setters
  * for them.
  */
 public class TransformNonVolatileFields extends ClassVisitor {
@@ -78,7 +78,6 @@ public class TransformNonVolatileFields extends ClassVisitor {
      */
     @Override
     public void visitEnd() {
-//        addInterface(cv);
         addSuperName(cv);
         nonTransientFields.forEach((name, descriptor) -> {
             createGetter(name, descriptor, cv, 8L);
@@ -104,6 +103,13 @@ public class TransformNonVolatileFields extends ClassVisitor {
         cv.visit(this.version, this.access, this.name, this.signature, this.pInterface.replace("/", "."), this.interfaces);
     }
 
+    /**
+     * Creates a setter for a non-transient field.
+     * @param name
+     * @param descriptor
+     * @param cv
+     * @param offset
+     */
     void createSetter(String name, String descriptor, ClassVisitor cv, long offset) {
         try {
             Class superClass = this.classLoader.loadClass(this.pInterface);
@@ -125,6 +131,13 @@ public class TransformNonVolatileFields extends ClassVisitor {
         }
     }
 
+    /**
+     * Creates a getter for a non-transient field.
+     * @param name
+     * @param descriptor
+     * @param cv
+     * @param offset
+     */
     void createGetter(String name, String descriptor, ClassVisitor cv, long offset) {
         try{
 
