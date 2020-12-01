@@ -88,7 +88,7 @@ public class PTransformer extends AbstractMojo {
 
 
                         String packageName = aClass.getPackage().getName();
-                        writeBytes(persistentClasspath, packageName, filename, ".class", bytes);
+                        writeBytes(output+"/", packageName, filename, ".class", bytes);
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
@@ -136,7 +136,7 @@ public class PTransformer extends AbstractMojo {
 
     static byte[] transformClass(String classpath, Class c, String pSuperName, MavenProject project) throws IOException {
         ClassLoader classLoader = Functions.getProjectClassLoader(project);
-        long size = getSizeOfFields(c);
+        long size = Functions.getSizeOfFields(c);
         String s = classpath + c.getName().replace(".", "/") + ".class";
         ClassWriter classWriter = new ClassWriter(0);
         ClassReader classReader = new ClassReader(Files.readAllBytes(Paths.get(s).toAbsolutePath()));
@@ -170,28 +170,5 @@ public class PTransformer extends AbstractMojo {
         }
     }
 
-    static long getSizeOfFields(Class c) {
-        int size = 0;
-        for (Field f : c.getDeclaredFields()) {
-            if (f.getType().getSimpleName().compareTo("int") == 0) {
-                size += Integer.BYTES;
-            } else if (f.getType().getSimpleName() == "short") {
-                size += Short.BYTES;
-            } else if (f.getType().getSimpleName() == "char") {
-                size += Character.BYTES;
-            } else if (f.getType().getSimpleName() == "float") {
-                size += Float.BYTES;
-            } else if (f.getType().getSimpleName() == "double") {
-                size += Double.BYTES;
-            } else if (f.getType().getSimpleName() == "long") {
-                size += Long.BYTES;
-            } else if (f.getType().getSimpleName() == "byte") {
-                size += Byte.BYTES;
-            } else {
-                size += 0;
-            }
-        }
 
-        return size;
-    }
 }

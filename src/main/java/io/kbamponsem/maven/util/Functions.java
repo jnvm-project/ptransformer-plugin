@@ -4,6 +4,7 @@ import org.apache.maven.project.MavenProject;
 import org.objectweb.asm.Opcodes;
 
 import java.io.File;
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.net.URL;
 import java.net.URLClassLoader;
@@ -86,5 +87,56 @@ public class Functions {
                 return "double";
         }
         return "";
+    }
+
+    static public long getSizeOfFields(Class c) {
+        int size = 0;
+        for (Field f : c.getDeclaredFields()) {
+            if (f.getType().getSimpleName().compareTo("int") == 0) {
+                size += Integer.BYTES;
+            } else if (f.getType().getSimpleName() == "short") {
+                size += Short.BYTES;
+            } else if (f.getType().getSimpleName() == "char") {
+                size += Character.BYTES;
+            } else if (f.getType().getSimpleName() == "float") {
+                size += Float.BYTES;
+            } else if (f.getType().getSimpleName() == "double") {
+                size += Double.BYTES;
+            } else if (f.getType().getSimpleName() == "long") {
+                size += Long.BYTES;
+            } else if (f.getType().getSimpleName() == "byte") {
+                size += Byte.BYTES;
+            } else {
+                size += 0;
+            }
+        }
+
+        return size;
+    }
+
+    static public int getFieldOffset(int current, String desc){
+        switch (getTypeFromDesc(desc)){
+            case "int":
+                current += Integer.BYTES;
+                return current;
+            case "double":
+                current += Double.BYTES;
+                return current;
+            case "char":
+                current += Character.BYTES;
+            case "float":
+                current += Float.BYTES;
+                return current;
+            case "long":
+                current += Long.BYTES;
+                return current;
+            case "short":
+                current += Short.BYTES;
+                return current;
+            case "byte":
+                current += Byte.BYTES;
+                return current;
+        }
+        return 0;
     }
 }

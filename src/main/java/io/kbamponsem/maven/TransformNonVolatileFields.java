@@ -27,6 +27,7 @@ public class TransformNonVolatileFields extends ClassVisitor {
     String superName;
     String descriptor;
     String[] interfaces, exceptions;
+    int current = 0;
     final String[] getSetType = new String[] {"get", "set"};
 
     public TransformNonVolatileFields(ClassVisitor classVisitor, String pInterface, ClassLoader classLoader) {
@@ -79,9 +80,11 @@ public class TransformNonVolatileFields extends ClassVisitor {
     @Override
     public void visitEnd() {
         addSuperName(cv);
+
         nonTransientFields.forEach((name, descriptor) -> {
-            createGetter(name, descriptor, cv, 8L);
-            createSetter(name, descriptor, cv, 16L);
+            this.current = Functions.getFieldOffset(this.current, descriptor);
+            createGetter(name, descriptor, cv, this.current);
+            createSetter(name, descriptor, cv, this.current);
         });
         super.visitEnd();
     }
