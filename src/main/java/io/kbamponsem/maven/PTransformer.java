@@ -38,6 +38,11 @@ public class PTransformer extends AbstractMojo {
     @Parameter(property = "pSuperName")
     private String pSuperName;
 
+    @Parameter(property = "pInterface")
+    private String pInterface;
+
+    @Parameter(property = "copyClass")
+    private String copyClass;
 
     public void execute() throws MojoExecutionException, MojoFailureException {
         Vector<String> files = new Vector<>();
@@ -49,14 +54,6 @@ public class PTransformer extends AbstractMojo {
             FileUtils.listFiles(oDir, TrueFileFilter.INSTANCE, TrueFileFilter.TRUE).forEach(x -> {
                 files.add(transformClassFiles(x, oDir));
             });
-//
-//            List<URL> pathUrls = new ArrayList<>();
-//            for (Object compilePath : project.getRuntimeClasspathElements()) {
-//                String s = (String) compilePath;
-//                pathUrls.add(new File(s).toURI().toURL());
-//            }
-//
-//            URL[] urlsForClassLoader = pathUrls.toArray(new URL[pathUrls.size()]);
 
             ClassLoader classLoader = Functions.getProjectClassLoader(project);
 
@@ -82,14 +79,14 @@ public class PTransformer extends AbstractMojo {
                 if (aBoolean == true) {
                     try {
                         String persistentClasspath = project.getBasedir() + "/target/persistent/";
-                        byte[] bytes = transformClass(output + "/", aClass, pSuperName, project);
+                        byte[] bytes = transformClass(output + "/", aClass, pInterface, project, copyClass);
 
                         String filename = aClass.getSimpleName();
 
 
                         String packageName = aClass.getPackage().getName();
                         writeBytes(output+"/", packageName, filename, ".class", bytes);
-                    } catch (IOException e) {
+                    } catch (IOException | ClassNotFoundException e) {
                         e.printStackTrace();
                     }
                 }
@@ -134,17 +131,19 @@ public class PTransformer extends AbstractMojo {
         return false;
     }
 
-    static byte[] transformClass(String classpath, Class c, String pSuperName, MavenProject project) throws IOException {
+    static byte[] transformClass(String classpath, Class c, String pInterface, MavenProject project, String copyClassName) throws IOException, ClassNotFoundException {
         ClassLoader classLoader = Functions.getProjectClassLoader(project);
         long size = Functions.getSizeOfFields(c);
+
         String s = classpath + c.getName().replace(".", "/") + ".class";
         ClassWriter classWriter = new ClassWriter(0);
         ClassReader classReader = new ClassReader(Files.readAllBytes(Paths.get(s).toAbsolutePath()));
+//        classReader1.accept(classWriter, 0);
         AddSizeMethod persistentMethod = new AddSizeMethod(classWriter, c.getName());
         AddSizeField addSizeField = new AddSizeField(persistentMethod, size);
-        AddSuperCall addSuperCall = new AddSuperCall(addSizeField, pSuperName);
+        AddSuperCall addSuperCall = new AddSuperCall(addSizeField, pInterface);
         AddEqualMethod addEqualMethod = new AddEqualMethod(addSuperCall, c);
-        TransformNonVolatileFields transformNonVolatileFields = new TransformNonVolatileFields(addEqualMethod, pSuperName, classLoader);
+        TransformNonVolatileFields transformNonVolatileFields = new TransformNonVolatileFields(addEqualMethod, pInterface, classLoader, c);
         classReader.accept(transformNonVolatileFields, 0);
         return classWriter.toByteArray();
     }

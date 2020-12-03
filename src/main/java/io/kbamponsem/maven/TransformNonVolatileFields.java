@@ -30,10 +30,11 @@ public class TransformNonVolatileFields extends ClassVisitor {
     int current = 0;
     final String[] getSetType = new String[] {"get", "set"};
 
-    public TransformNonVolatileFields(ClassVisitor classVisitor, String pInterface, ClassLoader classLoader) {
+    public TransformNonVolatileFields(ClassVisitor classVisitor, String pInterface, ClassLoader classLoader, Class c) {
         super(Opcodes.ASM8, classVisitor);
         this.pInterface = pInterface;
         this.classLoader = classLoader;
+        this.superName = c.getSuperclass().getName();
     }
 
     @Override
@@ -42,9 +43,7 @@ public class TransformNonVolatileFields extends ClassVisitor {
         this.access = access;
         this.name = name;
         this.signature = signature;
-        this.superName = superName;
         this.interfaces = interfaces;
-
         super.visit(version, access, name, signature, superName, interfaces);
     }
 
@@ -79,6 +78,7 @@ public class TransformNonVolatileFields extends ClassVisitor {
      */
     @Override
     public void visitEnd() {
+        addInterface(cv);
         addSuperName(cv);
 
         nonTransientFields.forEach((name, descriptor) -> {
@@ -103,7 +103,8 @@ public class TransformNonVolatileFields extends ClassVisitor {
     }
 
     void addSuperName(ClassVisitor cv) {
-        cv.visit(this.version, this.access, this.name, this.signature, this.pInterface.replace("/", "."), this.interfaces);
+        System.out.println(this.superName);
+        cv.visit(this.version, this.access, this.name, this.signature, this.superName.replace("/", "."), this.interfaces);
     }
 
     /**
@@ -115,8 +116,8 @@ public class TransformNonVolatileFields extends ClassVisitor {
      */
     void createSetter(String name, String descriptor, ClassVisitor cv, long offset) {
         try {
-            Class superClass = this.classLoader.loadClass(this.pInterface);
-            Method[] superClassMethods = superClass.getDeclaredMethods();
+            Class pInterfaceClass = this.classLoader.loadClass(this.pInterface);
+            Method[] superClassMethods = pInterfaceClass.getDeclaredMethods();
             String methodName = Functions.getMethodFromName(superClassMethods, Functions.getTypeFromDesc(descriptor), getSetType[1]).getName();
             name = Functions.capitalize(name);
             MethodVisitor mv =
@@ -144,8 +145,8 @@ public class TransformNonVolatileFields extends ClassVisitor {
     void createGetter(String name, String descriptor, ClassVisitor cv, long offset) {
         try{
 
-            Class superClass = this.classLoader.loadClass(this.pInterface);
-            Method[] superClassMethods = superClass.getDeclaredMethods();
+            Class pInterfaceClass = this.classLoader.loadClass(this.pInterface);
+            Method[] superClassMethods = pInterfaceClass.getDeclaredMethods();
             String methodName = Functions.getMethodFromName(superClassMethods, Functions.getTypeFromDesc(descriptor), getSetType[0]).getName();
             name = Functions.capitalize(name);
             MethodVisitor mv =

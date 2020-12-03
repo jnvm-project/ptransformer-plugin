@@ -1,4 +1,5 @@
 /home/amponsem/Projects/jnvm/ptransformer-plugin/src/main/java/io/kbamponsem/maven/CleanPersistent.java
+/home/amponsem/Projects/jnvm/ptransformer-plugin/src/main/java/io/kbamponsem/maven/CopyClassVisitor.java
 /home/amponsem/Projects/jnvm/ptransformer-plugin/src/main/java/io/kbamponsem/maven/AddSizeMethod.java
 /home/amponsem/Projects/jnvm/ptransformer-plugin/src/main/java/io/kbamponsem/maven/AddSuperCall.java
 /home/amponsem/Projects/jnvm/ptransformer-plugin/src/main/java/io/kbamponsem/maven/FieldAccessMethodTransformer.java
