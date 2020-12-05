@@ -14,7 +14,7 @@ public class AddEqualMethod extends ClassVisitor {
     public void visitEnd() {
         cv.visitField(Opcodes.ACC_PRIVATE, "obj", "Ljava/lang/Object;", null, null);
 
-        MethodVisitor mv = cv.visitMethod(Opcodes.ACC_PUBLIC, "equals", "(Ljava/lang/Object;)Z", null, null);
+        MethodVisitor mv = cv.visitMethod(Opcodes.ACC_PUBLIC, "$equals", "(Ljava/lang/Object;)Z", null, null);
         Label TRUE = new Label();
         Label END = new Label();
         Label FALSE = new Label();

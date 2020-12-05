@@ -8,9 +8,15 @@ import org.objectweb.asm.Opcodes;
 public class AddSizeMethod extends ClassVisitor {
     String SIZE_NAME;
     String className;
+    boolean sizeExists = false;
     public AddSizeMethod(ClassVisitor classVisitor, String className) {
         super(Opcodes.ASM8, classVisitor);
         this.className = className;
+    }
+
+    @Override
+    public MethodVisitor visitMethod(int access, String name, String descriptor, String signature, String[] exceptions) {
+        return super.visitMethod(access, name, descriptor, signature, exceptions);
     }
 
     @Override
@@ -24,7 +30,7 @@ public class AddSizeMethod extends ClassVisitor {
 
     @Override
     public void visitEnd() {
-        MethodVisitor methodVisitor = cv.visitMethod(Opcodes.ACC_PUBLIC, "size", "()J", null, null);
+        MethodVisitor methodVisitor = cv.visitMethod(Opcodes.ACC_PUBLIC, "$size" , "()J", null, null);
         if (methodVisitor != null) {
             methodVisitor.visitCode();
             methodVisitor.visitVarInsn(Opcodes.ALOAD, 0);
