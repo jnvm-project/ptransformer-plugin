@@ -134,14 +134,14 @@ public class PTransformer extends AbstractMojo {
     static byte[] transformClass(String classpath, Class c, String pInterface, MavenProject project, String copyClassName) throws IOException, ClassNotFoundException {
         ClassLoader classLoader = Functions.getProjectClassLoader(project);
         long size = Functions.getSizeOfFields(c);
-        Vector<String> copyConstructors = new Vector<>();
+        Vector<String> copyConstructors;
 
         String s = classpath + c.getName().replace(".", "/") + ".class";
         String s1 = classpath + copyClassName.replace(".", "/") + ".class";
         ClassWriter classWriter = new ClassWriter(0);
         ClassReader classReader = new ClassReader(Files.readAllBytes(Paths.get(s).toAbsolutePath()));
         ClassReader classReader1 = new ClassReader(Files.readAllBytes(Paths.get(s1).toAbsolutePath()));
-
+//
         CopyClassVisitor copyClassVisitor = new CopyClassVisitor(classWriter, c.getName().replace(".", "/"));
         copyConstructors = copyClassVisitor.getCopyConstructors();
 
@@ -151,7 +151,7 @@ public class PTransformer extends AbstractMojo {
         AddSizeField addSizeField = new AddSizeField(persistentMethod, size);
 
         // get copy constructors, then send them to the AddSuperCall class
-        AddSuperCall addSuperCall = new AddSuperCall(addSizeField, pInterface, copyConstructors, copyClassName);
+        AddSuperCall addSuperCall = new AddSuperCall(addSizeField, pInterface, copyConstructors, c.getName().replace(".", "/"));
 
         AddEqualMethod addEqualMethod = new AddEqualMethod(addSuperCall, c);
         TransformNonVolatileFields transformNonVolatileFields = new TransformNonVolatileFields(addEqualMethod, pInterface, classLoader, c);

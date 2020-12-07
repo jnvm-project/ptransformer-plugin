@@ -7,4 +7,6 @@
 /home/amponsem/Projects/jnvm/ptransformer-plugin/src/main/java/io/kbamponsem/maven/TransformNonVolatileFields.java
 /home/amponsem/Projects/jnvm/ptransformer-plugin/src/main/java/io/kbamponsem/maven/AddEqualMethod.java
 /home/amponsem/Projects/jnvm/ptransformer-plugin/src/main/java/io/kbamponsem/maven/PTransformer.java
+/home/amponsem/Projects/jnvm/ptransformer-plugin/src/main/java/io/kbamponsem/maven/CopyMethodVisitor.java
 /home/amponsem/Projects/jnvm/ptransformer-plugin/src/main/java/io/kbamponsem/maven/util/Functions.java
+/home/amponsem/Projects/jnvm/ptransformer-plugin/src/main/java/io/kbamponsem/maven/util/MethodDetails.java

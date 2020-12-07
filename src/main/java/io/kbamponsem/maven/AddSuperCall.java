@@ -10,13 +10,13 @@ public class AddSuperCall extends ClassVisitor {
     String pInterface;
     long offset;
     Vector<String> copyConstructor;
-    String copyClassName;
-    public AddSuperCall(ClassVisitor classVisitor, String pInterface, Vector<String> copyConstructor, String copyClassName) {
+    String className;
+    public AddSuperCall(ClassVisitor classVisitor, String pInterface, Vector<String> copyConstructor, String className) {
         super(Opcodes.ASM8, classVisitor);
         this.pInterface = pInterface;
 //        this.offset = offset;
         this.copyConstructor = copyConstructor;
-        this.copyClassName = copyClassName;
+        this.className = className;
     }
 
     @Override
@@ -27,19 +27,22 @@ public class AddSuperCall extends ClassVisitor {
             mv.visitVarInsn(Opcodes.ALOAD, 0);
             mv.visitVarInsn(Opcodes.LLOAD, 1);
             mv.visitMethodInsn(Opcodes.INVOKESPECIAL, pInterface.replace("/", "."), "<init>", "(J)V", true);
+            mv.visitInsn(Opcodes.RETURN);
             copyConstructor.forEach(x->{
                 if(x.contains("$0")){
+                    mv.visitCode();
                     mv.visitVarInsn(Opcodes.ALOAD, 0);
-                    mv.visitMethodInsn(Opcodes.INVOKESPECIAL, copyClassName.replace("/", "."), x, "()V", true);
+                    mv.visitMethodInsn(Opcodes.INVOKESPECIAL, className.replace("/", "."), x, "()V", true);
+                    mv.visitInsn(Opcodes.RETURN);
                 }
                 else{
+                    mv.visitCode();
                     mv.visitVarInsn(Opcodes.ALOAD, 0);
                     mv.visitVarInsn(Opcodes.LLOAD, 1);
-                    mv.visitMethodInsn(Opcodes.INVOKESPECIAL, copyClassName.replace("/", "."), x, "(J)V", true);
-
+                    mv.visitMethodInsn(Opcodes.INVOKESPECIAL, className.replace("/", "."), x, "(J)V", true);
+                    mv.visitInsn(Opcodes.RETURN);
                 }
             });
-            mv.visitInsn(Opcodes.RETURN);
             mv.visitMaxs(5, 5);
             mv.visitEnd();
         }

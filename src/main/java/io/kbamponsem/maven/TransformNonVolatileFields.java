@@ -34,7 +34,7 @@ public class TransformNonVolatileFields extends ClassVisitor {
         super(Opcodes.ASM8, classVisitor);
         this.pInterface = pInterface;
         this.classLoader = classLoader;
-        this.superName = c.getSuperclass().getName();
+        this.superName = c.getSuperclass().getName().compareTo("java.lang.Object") == 0 ? null : c.getSuperclass().getName();
     }
 
     @Override
@@ -79,7 +79,9 @@ public class TransformNonVolatileFields extends ClassVisitor {
     @Override
     public void visitEnd() {
         addInterface(cv);
-        addSuperName(cv);
+        if(superName != null) {
+            addSuperName(cv);
+        }
 
         nonTransientFields.forEach((name, descriptor) -> {
             this.current = Functions.getFieldOffset(this.current, descriptor);
@@ -95,15 +97,17 @@ public class TransformNonVolatileFields extends ClassVisitor {
      * @param cv
      */
     void addInterface(ClassVisitor cv) {
-
         String[] _interfaces = Arrays.copyOf(this.interfaces, this.interfaces.length + 1);
-        _interfaces[this.interfaces.length] = this.pInterface;
+        _interfaces[this.interfaces.length] = this.pInterface.replace(".", "/");
 
+        System.out.println(this.interfaces.length);
+        System.out.println(_interfaces.length);
+
+        Arrays.asList(_interfaces).forEach(System.out::println);
         cv.visit(this.version, this.access, this.name, this.superName, this.signature, _interfaces);
     }
 
     void addSuperName(ClassVisitor cv) {
-        System.out.println(this.superName);
         cv.visit(this.version, this.access, this.name, this.signature, this.superName.replace("/", "."), this.interfaces);
     }
 
