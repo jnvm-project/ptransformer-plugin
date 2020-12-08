@@ -1,8 +1,10 @@
+io/kbamponsem/maven/AddCopyData.class
 io/kbamponsem/maven/CleanPersistent.class
 io/kbamponsem/maven/FieldAccessMethodTransformer.class
 io/kbamponsem/maven/CopyClassVisitor.class
 io/kbamponsem/maven/CopyMethodVisitor.class
 io/kbamponsem/maven/PTransformer.class
+io/kbamponsem/maven/util/FieldDetails.class
 io/kbamponsem/maven/TransformNonVolatileFields.class
 io/kbamponsem/maven/AddSuperCall.class
 io/kbamponsem/maven/util/Functions.class

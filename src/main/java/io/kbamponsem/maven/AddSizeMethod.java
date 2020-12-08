@@ -35,7 +35,7 @@ public class AddSizeMethod extends ClassVisitor {
             methodVisitor.visitCode();
             methodVisitor.visitVarInsn(Opcodes.ALOAD, 0);
             methodVisitor.visitFieldInsn(Opcodes.GETFIELD, className.replace(".", "/"), "SIZE", "J");
-            methodVisitor.visitInsn(Opcodes.IRETURN);
+            methodVisitor.visitInsn(Opcodes.LRETURN);
             methodVisitor.visitMaxs(3, 3);
             methodVisitor.visitEnd();
         }

@@ -1,10 +1,7 @@
 package io.kbamponsem.maven;
 
 import io.kbamponsem.maven.util.Functions;
-import org.objectweb.asm.ClassVisitor;
-import org.objectweb.asm.FieldVisitor;
-import org.objectweb.asm.MethodVisitor;
-import org.objectweb.asm.Opcodes;
+import org.objectweb.asm.*;
 
 import java.lang.reflect.Method;
 import java.util.Arrays;
@@ -28,13 +25,17 @@ public class TransformNonVolatileFields extends ClassVisitor {
     String descriptor;
     String[] interfaces, exceptions;
     int current = 0;
-    final String[] getSetType = new String[] {"get", "set"};
+    final String[] getSetType = new String[]{"get", "set"};
+    String className;
+    Class clazz;
 
     public TransformNonVolatileFields(ClassVisitor classVisitor, String pInterface, ClassLoader classLoader, Class c) {
         super(Opcodes.ASM8, classVisitor);
         this.pInterface = pInterface;
         this.classLoader = classLoader;
-        this.superName = c.getSuperclass().getName().compareTo("java.lang.Object") == 0 ? null : c.getSuperclass().getName();
+        this.superName = c.getSuperclass().getName();
+        this.className = c.getName();
+        this.clazz = c;
     }
 
     @Override
@@ -66,6 +67,9 @@ public class TransformNonVolatileFields extends ClassVisitor {
         });
 
         mv = cv.visitMethod(access, name, descriptor, signature, exceptions);
+        if(name.compareTo("<init>") == 0 && descriptor.compareTo("()V") == 0){
+//            mv = new CopyMethodVisitor(mv, className);
+        }
         if (mv != null) {
             mv = new FieldAccessMethodTransformer(mv, nonTransients);
         }
@@ -79,7 +83,7 @@ public class TransformNonVolatileFields extends ClassVisitor {
     @Override
     public void visitEnd() {
         addInterface(cv);
-        if(superName != null) {
+        if (superName != null) {
             addSuperName(cv);
         }
 
@@ -108,11 +112,12 @@ public class TransformNonVolatileFields extends ClassVisitor {
     }
 
     void addSuperName(ClassVisitor cv) {
-        cv.visit(this.version, this.access, this.name, this.signature, this.superName.replace("/", "."), this.interfaces);
+        cv.visit(this.version, this.access, this.name, this.signature, this.superName.replace(".", "/"), this.interfaces);
     }
 
     /**
      * Creates a setter for a non-transient field.
+     *
      * @param name
      * @param descriptor
      * @param cv
@@ -130,7 +135,7 @@ public class TransformNonVolatileFields extends ClassVisitor {
             mv.visitVarInsn(Opcodes.ALOAD, 0);
             mv.visitLdcInsn(offset);
             mv.visitVarInsn(Functions.getDescOpcode(descriptor), 1);
-            mv.visitMethodInsn(Opcodes.INVOKEINTERFACE, pInterface.replace("/", "."), methodName, "(J" + descriptor + ")V", true);
+            mv.visitMethodInsn(Opcodes.INVOKEINTERFACE, pInterface.replace(".", "/"), methodName, "(J" + descriptor + ")V", true);
             mv.visitInsn(Opcodes.RETURN);
             mv.visitMaxs(5, 5);
             mv.visitEnd();
@@ -141,13 +146,14 @@ public class TransformNonVolatileFields extends ClassVisitor {
 
     /**
      * Creates a getter for a non-transient field.
+     *
      * @param name
      * @param descriptor
      * @param cv
      * @param offset
      */
     void createGetter(String name, String descriptor, ClassVisitor cv, long offset) {
-        try{
+        try {
 
             Class pInterfaceClass = this.classLoader.loadClass(this.pInterface);
             Method[] superClassMethods = pInterfaceClass.getDeclaredMethods();
@@ -158,13 +164,15 @@ public class TransformNonVolatileFields extends ClassVisitor {
             mv.visitCode();
             mv.visitVarInsn(Opcodes.ALOAD, 0);
             mv.visitLdcInsn(offset);
-            mv.visitMethodInsn(Opcodes.INVOKEINTERFACE, pInterface.replace("/", "."), methodName, "(J)"+descriptor, true);
+            mv.visitMethodInsn(Opcodes.INVOKEINTERFACE, pInterface.replace(".", "/"), methodName, "(J)" + descriptor, true);
             mv.visitInsn(Opcodes.IRETURN);
             mv.visitMaxs(5, 5);
             mv.visitEnd();
 
-        }catch (Exception e){
+        } catch (Exception e) {
 
         }
     }
+
+
 }

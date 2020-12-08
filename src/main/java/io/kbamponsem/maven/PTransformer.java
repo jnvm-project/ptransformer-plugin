@@ -1,6 +1,8 @@
 package io.kbamponsem.maven;
 
+import io.kbamponsem.maven.util.FieldDetails;
 import io.kbamponsem.maven.util.Functions;
+import io.kbamponsem.maven.util.MethodDetails;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.filefilter.TrueFileFilter;
 import org.apache.maven.plugin.AbstractMojo;
@@ -134,26 +136,40 @@ public class PTransformer extends AbstractMojo {
     static byte[] transformClass(String classpath, Class c, String pInterface, MavenProject project, String copyClassName) throws IOException, ClassNotFoundException {
         ClassLoader classLoader = Functions.getProjectClassLoader(project);
         long size = Functions.getSizeOfFields(c);
-        Vector<String> copyConstructors;
+        HashMap<String, String> copyConstructors;
+        Vector<FieldDetails> fieldDetails;
+        Vector<MethodDetails> methodDetails;
 
         String s = classpath + c.getName().replace(".", "/") + ".class";
         String s1 = classpath + copyClassName.replace(".", "/") + ".class";
         ClassWriter classWriter = new ClassWriter(0);
+        ClassWriter classWriter1 = new ClassWriter(0);
         ClassReader classReader = new ClassReader(Files.readAllBytes(Paths.get(s).toAbsolutePath()));
         ClassReader classReader1 = new ClassReader(Files.readAllBytes(Paths.get(s1).toAbsolutePath()));
-//
-        CopyClassVisitor copyClassVisitor = new CopyClassVisitor(classWriter, c.getName().replace(".", "/"));
-        copyConstructors = copyClassVisitor.getCopyConstructors();
 
+        CopyClassVisitor copyClassVisitor = new CopyClassVisitor(classWriter1, c.getName().replace(".", "/"));
         classReader1.accept(copyClassVisitor, 0);
+        copyConstructors = copyClassVisitor.getCopyConstructors();
+        fieldDetails = copyClassVisitor.getFieldDetails();
+        methodDetails = copyClassVisitor.getMethodDetails();
+
+        for(MethodDetails m : methodDetails){
+            System.out.println(m.getName() + "\t" + m.getDescriptor());
+        }
+
+        for(FieldDetails f: fieldDetails){
+            System.out.println(f.getName() + "\t" + f.getValue());
+        }
 
         AddSizeMethod persistentMethod = new AddSizeMethod(classWriter, c.getName());
         AddSizeField addSizeField = new AddSizeField(persistentMethod, size);
 
-        // get copy constructors, then send them to the AddSuperCall class
-        AddSuperCall addSuperCall = new AddSuperCall(addSizeField, pInterface, copyConstructors, c.getName().replace(".", "/"));
+        AddCopyData addCopyData = new AddCopyData(addSizeField, methodDetails, fieldDetails);
 
-        AddEqualMethod addEqualMethod = new AddEqualMethod(addSuperCall, c);
+        // get copy constructors, then send them to the AddSuperCall class
+        AddSuperCall addSuperCall = new AddSuperCall(addSizeField, pInterface, copyConstructors, c.getName().replace("/", "."));
+
+        AddEqualMethod addEqualMethod = new AddEqualMethod(addCopyData, c);
         TransformNonVolatileFields transformNonVolatileFields = new TransformNonVolatileFields(addEqualMethod, pInterface, classLoader, c);
 
         classReader.accept(transformNonVolatileFields, 0);
