@@ -138,9 +138,6 @@ public class PTransformer extends AbstractMojo {
     static byte[] transformClass(String classpath, Class c, String pInterface, MavenProject project, String copyClassName) throws IOException, ClassNotFoundException {
         ClassLoader classLoader = Functions.getProjectClassLoader(project);
         long size = Functions.getSizeOfFields(c);
-        HashMap<String, String> copyConstructors;
-        Vector<FieldNode> fieldDetails;
-        Vector<MethodNode> methodDetails;
 
         String s = classpath + c.getName().replace(".", "/") + ".class";
         String s1 = classpath + copyClassName.replace(".", "/") + ".class";
@@ -152,7 +149,7 @@ public class PTransformer extends AbstractMojo {
         CopyClassVisitor copyClassVisitor = new CopyClassVisitor(classWriter);
 ////        classReader1.accept(copyClassVisitor, 0);
 //        AddSizeMethod persistentMethod = new AddSizeMethod(classWriter, c.getName());
-        AddSizeField addSizeField = new AddSizeField(copyClassVisitor, size);
+        AddSizeField addSizeField = new AddSizeField(classWriter, size);
 //
 ////        AddCopyData addCopyData = new AddCopyData(addSizeField, null, null , c.getName());
 //
@@ -160,9 +157,10 @@ public class PTransformer extends AbstractMojo {
 //        AddSuperCall addSuperCall = new AddSuperCall(addSizeField, pInterface, null, c.getName().replace("/", "."));
 //
 //        AddEqualMethod addEqualMethod = new AddEqualMethod(addSuperCall, c);
-//        TransformNonVolatileFields transformNonVolatileFields = new TransformNonVolatileFields(addSizeField, pInterface, classLoader, c);
+        TransformNonVolatileFields transformNonVolatileFields = new TransformNonVolatileFields(addSizeField, pInterface, classLoader, c);
 
-        classReader1.accept(addSizeField, 0);
+        classReader2.accept(copyClassVisitor, 0);
+        classReader1.accept(transformNonVolatileFields, 0);
         return classWriter.toByteArray();
     }
 

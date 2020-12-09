@@ -19,8 +19,8 @@ public class CopyClassVisitor extends ClassVisitor {
     public MethodVisitor visitMethod(int access, String name, String descriptor, String signature, String[] exceptions) {
         if (name.compareTo("<init>") == 0) {
             name = "$copy" + count;
+            count += 1;
         }
-        count += 1;
         return super.visitMethod(access, name, descriptor, signature, exceptions);
     }
 
