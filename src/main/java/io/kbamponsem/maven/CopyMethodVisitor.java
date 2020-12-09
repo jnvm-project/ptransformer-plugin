@@ -11,13 +11,32 @@ public class CopyMethodVisitor extends MethodVisitor {
     }
 
     @Override
+    public void visitCode() {
+        mv.visitCode();
+    }
+
+    @Override
     public void visitInsn(int opcode) {
-        super.visitInsn(opcode);
+        mv.visitInsn(opcode);
+    }
+
+    @Override
+    public void visitVarInsn(int opcode, int var) {
+        mv.visitVarInsn(opcode, var);
     }
 
     @Override
     public void visitMethodInsn(int opcode, String owner, String name, String descriptor, boolean isInterface) {
+        mv.visitMethodInsn(Opcodes.INVOKESPECIAL, owner, name, descriptor, isInterface);
+    }
 
-        super.visitMethodInsn(Opcodes.INVOKESPECIAL, this.owner.replace(".", "/"), "copy$0", "()V", false);
+    @Override
+    public void visitMaxs(int maxStack, int maxLocals) {
+        mv.visitMaxs(maxStack, maxLocals);
+    }
+
+    @Override
+    public void visitEnd() {
+        mv.visitEnd();
     }
 }

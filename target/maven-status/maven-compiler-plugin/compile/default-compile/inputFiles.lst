@@ -3,6 +3,7 @@
 /home/amponsem/Projects/jnvm/ptransformer-plugin/src/main/java/io/kbamponsem/maven/FieldAccessMethodTransformer.java
 /home/amponsem/Projects/jnvm/ptransformer-plugin/src/main/java/io/kbamponsem/maven/TransformNonVolatileFields.java
 /home/amponsem/Projects/jnvm/ptransformer-plugin/src/main/java/io/kbamponsem/maven/PTransformer.java
+/home/amponsem/Projects/jnvm/ptransformer-plugin/src/main/java/io/kbamponsem/maven/AddCopyData.java
 /home/amponsem/Projects/jnvm/ptransformer-plugin/src/main/java/io/kbamponsem/maven/util/MethodDetails.java
 /home/amponsem/Projects/jnvm/ptransformer-plugin/src/main/java/io/kbamponsem/maven/CleanPersistent.java
 /home/amponsem/Projects/jnvm/ptransformer-plugin/src/main/java/io/kbamponsem/maven/util/FieldDetails.java

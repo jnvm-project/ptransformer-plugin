@@ -6,38 +6,43 @@ import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
+import org.objectweb.asm.tree.FieldNode;
 import org.objectweb.asm.tree.MethodInsnNode;
+import org.objectweb.asm.tree.MethodNode;
 
+import java.util.Arrays;
 import java.util.Vector;
 
 public class AddCopyData extends ClassVisitor {
 
-    Vector<MethodDetails> methodDetails;
-    Vector<FieldDetails> fieldDetails;
+    Vector<MethodNode> methodDetails;
+    Vector<FieldNode> fieldDetails;
+    String className;
 
-    public AddCopyData(ClassVisitor classVisitor, Vector<MethodDetails> methodDetails, Vector<FieldDetails> fieldDetails) {
+    public AddCopyData(ClassVisitor classVisitor, Vector<MethodNode> methodDetails, Vector<FieldNode> fieldDetails, String className) {
         super(Opcodes.ASM8, classVisitor);
         this.fieldDetails = fieldDetails;
         this.methodDetails = methodDetails;
+        this.className = className;
     }
 
     @Override
     public void visitEnd() {
-        fieldDetails.forEach(x->{
-            cv.visitField(x.getAccess(), x.getName(), x.getDescriptor(), x.getSignature(), x.getValue());
+        fieldDetails.forEach(x -> {
+            cv.visitField(x.access, x.name, x.desc, x.signature, x.value);
         });
 
-        methodDetails.forEach(x->{
+        methodDetails.forEach(x -> {
             createMethod(cv, x);
         });
         super.visitEnd();
     }
 
-    MethodVisitor createMethod(ClassVisitor cv, MethodDetails m){
-        MethodVisitor mv = cv.visitMethod(m.getAccess(), m.getName(), m.getDescriptor(), m.getSignature(), m.getExceptions());
-        if(mv != null){
-            return mv;
-        }
-        return null;
+    void createMethod(ClassVisitor cv, MethodNode m) {
+        MethodVisitor mv = cv.visitMethod(m.access, m.name, m.desc, m.signature, m.exceptions.toArray(new String[0]));
+//        CopyMethodVisitor cmv = new CopyMethodVisitor(mv, null);
+//        Arrays.asList().forEach(System.out::println);
+//        CopyMethodVisitor cmv = new CopyMethodVisitor(m.getMv(), className);
+//        cmv.visitCode();
     }
 }

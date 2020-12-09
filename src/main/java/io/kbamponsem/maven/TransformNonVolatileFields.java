@@ -33,7 +33,7 @@ public class TransformNonVolatileFields extends ClassVisitor {
         super(Opcodes.ASM8, classVisitor);
         this.pInterface = pInterface;
         this.classLoader = classLoader;
-        this.superName = c.getSuperclass().getName();
+        this.superName = c.getSuperclass().getName().compareTo("java.lang.Object") == 0 ? null : c.getSuperclass().getName();
         this.className = c.getName();
         this.clazz = c;
     }
