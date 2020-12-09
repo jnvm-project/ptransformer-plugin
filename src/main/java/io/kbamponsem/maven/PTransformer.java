@@ -146,7 +146,7 @@ public class PTransformer extends AbstractMojo {
 
         ClassWriter classWriter = new ClassWriter(0);
 
-        CopyClassVisitor copyClassVisitor = new CopyClassVisitor(classWriter);
+        CopyClassVisitor copyClassVisitor = new CopyClassVisitor(classWriter, copyClassName, c.getName());
 ////        classReader1.accept(copyClassVisitor, 0);
 //        AddSizeMethod persistentMethod = new AddSizeMethod(classWriter, c.getName());
         AddSizeField addSizeField = new AddSizeField(classWriter, size);
