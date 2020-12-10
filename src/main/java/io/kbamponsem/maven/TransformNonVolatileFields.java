@@ -33,7 +33,6 @@ public class TransformNonVolatileFields extends ClassVisitor {
         super(Opcodes.ASM8, classVisitor);
         this.pInterface = pInterface;
         this.classLoader = classLoader;
-        this.superName = c.getSuperclass().getName().compareTo("java.lang.Object") == 0 ? null : c.getSuperclass().getName();
         this.className = c.getName();
         this.clazz = c;
     }
@@ -44,8 +43,13 @@ public class TransformNonVolatileFields extends ClassVisitor {
         this.access = access;
         this.name = name;
         this.signature = signature;
+        this.superName = superName;
         this.interfaces = interfaces;
-        super.visit(version, access, name, signature, superName, interfaces);
+        System.out.println("SuperClass: " + superName);
+
+        String[] _interfaces = Arrays.copyOf(this.interfaces, this.interfaces.length + 1);
+        _interfaces[this.interfaces.length] = this.pInterface.replace(".", "/");
+        super.visit(version, access, name, signature, superName, _interfaces);
     }
 
     @Override
@@ -67,8 +71,8 @@ public class TransformNonVolatileFields extends ClassVisitor {
         });
 
         mv = cv.visitMethod(access, name, descriptor, signature, exceptions);
-        if(name.compareTo("<init>") == 0 && descriptor.compareTo("()V") == 0){
-//            mv = new CopyMethodVisitor(mv, className);
+        if (name.compareTo("<init>") == 0 && descriptor.compareTo("()V") == 0) {
+//            mv.visitMethodInsn(Opcodes.INVOKEDYNAMIC, className.replace(".", "/"), "copy$0", "()V",false);
         }
         if (mv != null) {
             mv = new FieldAccessMethodTransformer(mv, nonTransients);
@@ -82,37 +86,12 @@ public class TransformNonVolatileFields extends ClassVisitor {
      */
     @Override
     public void visitEnd() {
-        addInterface(cv);
-        if (superName != null) {
-            addSuperName(cv);
-        }
-
         nonTransientFields.forEach((name, descriptor) -> {
             this.current = Functions.getFieldOffset(this.current, descriptor);
             createGetter(name, descriptor, cv, this.current);
             createSetter(name, descriptor, cv, this.current);
         });
         super.visitEnd();
-    }
-
-    /**
-     * The required interface is added to the class c
-     *
-     * @param cv
-     */
-    void addInterface(ClassVisitor cv) {
-        String[] _interfaces = Arrays.copyOf(this.interfaces, this.interfaces.length + 1);
-        _interfaces[this.interfaces.length] = this.pInterface.replace(".", "/");
-
-        System.out.println(this.interfaces.length);
-        System.out.println(_interfaces.length);
-
-        Arrays.asList(_interfaces).forEach(System.out::println);
-        cv.visit(this.version, this.access, this.name, this.superName, this.signature, _interfaces);
-    }
-
-    void addSuperName(ClassVisitor cv) {
-        cv.visit(this.version, this.access, this.name, this.signature, this.superName.replace(".", "/"), this.interfaces);
     }
 
     /**
