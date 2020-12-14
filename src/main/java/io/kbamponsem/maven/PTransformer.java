@@ -157,7 +157,7 @@ public class PTransformer extends AbstractMojo {
 //        AddSuperCall addSuperCall = new AddSuperCall(addSizeField, pInterface, null, c.getName().replace("/", "."));
 //
 //        AddEqualMethod addEqualMethod = new AddEqualMethod(addSuperCall, c);
-        TransformNonVolatileFields transformNonVolatileFields = new TransformNonVolatileFields(addSizeField, pInterface, classLoader, c);
+        TransformNonVolatileFields transformNonVolatileFields = new TransformNonVolatileFields(addSizeField, pInterface, classLoader, c, copyClassVisitor.getCopyConstructors());
 
         classReader2.accept(copyClassVisitor, 0);
         classReader1.accept(transformNonVolatileFields, 0);

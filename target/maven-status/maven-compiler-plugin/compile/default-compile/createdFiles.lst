@@ -12,4 +12,5 @@ io/kbamponsem/maven/AddEqualMethod.class
 io/kbamponsem/maven/CopyClassVisitor$1.class
 io/kbamponsem/maven/util/MethodDetails.class
 io/kbamponsem/maven/AddSizeMethod.class
+io/kbamponsem/maven/CallCopyConstructor.class
 io/kbamponsem/maven/AddSizeField.class

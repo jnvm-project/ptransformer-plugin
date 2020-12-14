@@ -28,13 +28,15 @@ public class TransformNonVolatileFields extends ClassVisitor {
     final String[] getSetType = new String[]{"get", "set"};
     String className;
     Class clazz;
+    Vector<String> copyConst;
 
-    public TransformNonVolatileFields(ClassVisitor classVisitor, String pInterface, ClassLoader classLoader, Class c) {
+    public TransformNonVolatileFields(ClassVisitor classVisitor, String pInterface, ClassLoader classLoader, Class c, Vector<String> copyConst) {
         super(Opcodes.ASM8, classVisitor);
         this.pInterface = pInterface;
         this.classLoader = classLoader;
         this.className = c.getName();
         this.clazz = c;
+        this.copyConst = copyConst;
     }
 
     @Override
@@ -71,13 +73,15 @@ public class TransformNonVolatileFields extends ClassVisitor {
         });
 
         mv = cv.visitMethod(access, name, descriptor, signature, exceptions);
-        if (name.compareTo("<init>") == 0 && descriptor.compareTo("()V") == 0) {
-//            mv.visitMethodInsn(Opcodes.INVOKEDYNAMIC, className.replace(".", "/"), "copy$0", "()V",false);
-        }
+
         if (mv != null) {
             mv = new FieldAccessMethodTransformer(mv, nonTransients);
         }
-
+        if (name.compareTo("<init>") == 0 && descriptor.compareTo("()V") == 0) {
+            if (copyConst.contains("$copy0")) {
+                mv = new CallCopyConstructor(mv, className);
+            }
+        }
         return mv;
     }
 
@@ -153,5 +157,18 @@ public class TransformNonVolatileFields extends ClassVisitor {
         }
     }
 
+//    void callCopyConstructor(ClassVisitor cv){
+//        MethodVisitor mv = cv.visitMethod(Opcodes.ACC_PUBLIC, "<init>", "()V", null, null);
+//        if (name.compareTo("<init>") == 0 && descriptor.compareTo("()V") == 0) {
+//            if (copyConst.contains("$copy0")) {
+//                mv.visitCode();
+//                mv.visitVarInsn(Opcodes.ALOAD, 0);
+//                mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL, className.replace(".", "/"), "$copy0", "()V", false);
+//                mv.visitInsn(Opcodes.RETURN);
+//                mv.visitMaxs(4,4);
+//                mv.visitEnd();
+//            }
+//        }
+//    }
 
 }

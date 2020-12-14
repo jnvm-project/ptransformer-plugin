@@ -1,7 +1,6 @@
 package io.kbamponsem.maven;
 
 import org.objectweb.asm.*;
-import org.objectweb.asm.tree.FieldNode;
 
 import java.util.Vector;
 
@@ -9,6 +8,7 @@ public class CopyClassVisitor extends ClassVisitor {
     int count = 0;
     String originalOwner;
     String newOwner;
+    Vector<String> copyConstructors = new Vector<>();
 
     public CopyClassVisitor(ClassVisitor classVisitor, String originalOwner, String newOwner) {
         super(Opcodes.ASM8, classVisitor);
@@ -25,6 +25,7 @@ public class CopyClassVisitor extends ClassVisitor {
     public MethodVisitor visitMethod(int access, String name, String descriptor, String signature, String[] exceptions) {
         if (name.compareTo("<init>") == 0) {
             name = "$copy" + count;
+            copyConstructors.add(name);
             count += 1;
         }
         MethodVisitor mv = cv.visitMethod(access, name, descriptor, signature, exceptions);
@@ -36,7 +37,6 @@ public class CopyClassVisitor extends ClassVisitor {
 
             @Override
             public void visitInsn(int opcode) {
-                System.out.println("V_Opcode: " + opcode );
                 super.visitInsn(opcode);
             }
 
@@ -47,7 +47,6 @@ public class CopyClassVisitor extends ClassVisitor {
 
             @Override
             public void visitVarInsn(int opcode, int var) {
-                System.out.println("VI_Opcode: "+opcode);
                 if(opcode == Opcodes.CHECKCAST){
                     visitVarInsn(Opcodes.ALOAD, 0);
                     visitVarInsn(Opcodes.ALOAD, 1);
@@ -108,5 +107,7 @@ public class CopyClassVisitor extends ClassVisitor {
             }
         };
     }
+
+    public Vector<String> getCopyConstructors(){return copyConstructors;}
 
 }
