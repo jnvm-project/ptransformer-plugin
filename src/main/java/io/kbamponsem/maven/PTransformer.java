@@ -56,14 +56,14 @@ public class PTransformer extends AbstractMojo {
             getLog().info("Root: " + output);
 
             FileUtils.listFiles(oDir, TrueFileFilter.INSTANCE, TrueFileFilter.TRUE).forEach(x -> {
-                files.add(transformClassFiles(x, oDir));
+                if (x.toString().contains(".class"))
+                    files.add(transformClassFiles(x, oDir));
             });
 
             ClassLoader classLoader = Functions.getProjectClassLoader(project);
 
             files.forEach(x -> {
                 try {
-
                     Class c = classLoader.loadClass(x);
 
                     if (isPersistence(c, persistentAnnotation)) {
@@ -82,14 +82,13 @@ public class PTransformer extends AbstractMojo {
             persistentClasses.forEach((aClass, aBoolean) -> {
                 if (aBoolean == true) {
                     try {
-                        String persistentClasspath = project.getBasedir() + "/target/persistent/";
                         byte[] bytes = transformClass(output + "/", aClass, pInterface, project, copyClass);
 
                         String filename = aClass.getSimpleName();
 
 
                         String packageName = aClass.getPackage().getName();
-                        writeBytes(output+"/", packageName, filename, ".class", bytes);
+                        writeBytes(output + "/", packageName, filename, ".class", bytes);
                     } catch (IOException | ClassNotFoundException e) {
                         e.printStackTrace();
                     }
