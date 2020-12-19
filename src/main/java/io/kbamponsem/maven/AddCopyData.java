@@ -39,10 +39,6 @@ public class AddCopyData extends ClassVisitor {
     }
 
     void createMethod(ClassVisitor cv, MethodNode m) {
-        MethodVisitor mv = cv.visitMethod(m.access, m.name, m.desc, m.signature, m.exceptions.toArray(new String[0]));
-//        CopyMethodVisitor cmv = new CopyMethodVisitor(mv, null);
-//        Arrays.asList().forEach(System.out::println);
-//        CopyMethodVisitor cmv = new CopyMethodVisitor(m.getMv(), className);
-//        cmv.visitCode();
+        cv.visitMethod(m.access, m.name, m.desc, m.signature, m.exceptions.toArray(new String[0]));
     }
 }

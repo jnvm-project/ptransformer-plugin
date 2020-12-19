@@ -94,11 +94,6 @@ public class PTransformer extends AbstractMojo {
                     }
                 }
             });
-
-            // Delete old classes folder.
-//            CleanPersistent.deleteDir(new File(project.getBasedir().getAbsolutePath(), "/target/classes"));
-
-            // Though cleaned, after building it replaces it since it is the classpath.
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -146,16 +141,7 @@ public class PTransformer extends AbstractMojo {
         ClassWriter classWriter = new ClassWriter(0);
 
         CopyClassVisitor copyClassVisitor = new CopyClassVisitor(classWriter, copyClassName, c.getName());
-////        classReader1.accept(copyClassVisitor, 0);
-//        AddSizeMethod persistentMethod = new AddSizeMethod(classWriter, c.getName());
         AddSizeField addSizeField = new AddSizeField(classWriter, size);
-//
-////        AddCopyData addCopyData = new AddCopyData(addSizeField, null, null , c.getName());
-//
-//        // get copy constructors, then send them to the AddSuperCall class
-//        AddSuperCall addSuperCall = new AddSuperCall(addSizeField, pInterface, null, c.getName().replace("/", "."));
-//
-//        AddEqualMethod addEqualMethod = new AddEqualMethod(addSuperCall, c);
         TransformNonVolatileFields transformNonVolatileFields = new TransformNonVolatileFields(addSizeField, pInterface, classLoader, c, copyClassVisitor.getCopyConstructors());
 
         classReader2.accept(copyClassVisitor, 0);

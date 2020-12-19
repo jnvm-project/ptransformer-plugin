@@ -47,7 +47,7 @@ public class CopyClassVisitor extends ClassVisitor {
 
             @Override
             public void visitVarInsn(int opcode, int var) {
-                if(opcode == Opcodes.CHECKCAST){
+                if (opcode == Opcodes.CHECKCAST) {
                     visitVarInsn(Opcodes.ALOAD, 0);
                     visitVarInsn(Opcodes.ALOAD, 1);
                     visitInsn(Opcodes.CHECKCAST);
@@ -65,8 +65,7 @@ public class CopyClassVisitor extends ClassVisitor {
 
             @Override
             public void visitTypeInsn(int opcode, String type) {
-                System.out.println("T_Opcode: "+opcode + "\t Type: "+ type);
-                if(type.equals(originalOwner) && (opcode == Opcodes.INSTANCEOF || opcode == Opcodes.CHECKCAST)){
+                if (type.equals(originalOwner) && (opcode == Opcodes.INSTANCEOF || opcode == Opcodes.CHECKCAST)) {
                     type = newOwner;
                 }
                 super.visitTypeInsn(opcode, type);
@@ -75,19 +74,15 @@ public class CopyClassVisitor extends ClassVisitor {
             @Override
             public void visitMethodInsn(int opcode, String owner, String name, String descriptor, boolean isInterface) {
                 String tmp = "";
-                System.out.println(owner + "\t" + name + "\t" + descriptor);
-                System.out.println("M_Opcode: "+ opcode);
                 if (opcode == Opcodes.INVOKESPECIAL && owner.equals("java/lang/Object") && name.compareTo("<init>") == 0) {
-//                    opcode = Opcodes.NOP;
-                } else{
-                    tmp = "(L"+originalOwner+";)V";
-                    if(descriptor.compareTo(tmp) == 0){
-                        descriptor = "(L"+newOwner+";)V";
+                } else {
+                    tmp = "(L" + originalOwner + ";)V";
+                    if (descriptor.compareTo(tmp) == 0) {
+                        descriptor = "(L" + newOwner + ";)V";
+                    } else if (descriptor.compareTo("(L" + originalOwner + ";)" + originalOwner) == 0) {
+                        descriptor = "(L" + newOwner + ";)" + newOwner;
                     }
-                    else if(descriptor.compareTo("(L"+originalOwner+";)"+originalOwner) == 0){
-                        descriptor = "(L"+newOwner+";)"+newOwner;
-                    }
-                    if(owner.equals(originalOwner)){
+                    if (owner.equals(originalOwner)) {
                         owner = newOwner;
                     }
                     super.visitMethodInsn(opcode, owner, name, descriptor, isInterface);

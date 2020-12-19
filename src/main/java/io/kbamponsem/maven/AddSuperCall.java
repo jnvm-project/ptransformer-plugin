@@ -15,7 +15,6 @@ public class AddSuperCall extends ClassVisitor {
     public AddSuperCall(ClassVisitor classVisitor, String pInterface, HashMap<String, String> copyConstructor, String className) {
         super(Opcodes.ASM8, classVisitor);
         this.pInterface = pInterface;
-//        this.offset = offset;
         this.copyConstructor = copyConstructor;
         this.className = className;
     }
@@ -29,21 +28,6 @@ public class AddSuperCall extends ClassVisitor {
             mv.visitVarInsn(Opcodes.LLOAD, 1);
             mv.visitMethodInsn(Opcodes.INVOKESPECIAL, pInterface.replace(".", "/"), "<init>", "(J)V", true);
             mv.visitInsn(Opcodes.RETURN);
-//            copyConstructor.forEach((x,y)->{
-//                if(x.contains("$0")){
-//                    mv.visitCode();
-//                    mv.visitVarInsn(Opcodes.ALOAD, 0);
-//                    mv.visitMethodInsn(Opcodes.INVOKESPECIAL, className.replace(".", "/"), x, y, true);
-//                    mv.visitInsn(Opcodes.RETURN);
-//                }
-//                else{
-//                    mv.visitCode();
-//                    mv.visitVarInsn(Opcodes.ALOAD, 0);
-//                    mv.visitVarInsn(Opcodes.LLOAD, 1);
-//                    mv.visitMethodInsn(Opcodes.INVOKESPECIAL, className.replace(".", "/"), x, y, true);
-//                    mv.visitInsn(Opcodes.RETURN);
-//                }
-//            });
             mv.visitMaxs(5, 5);
             mv.visitEnd();
         }
