@@ -77,9 +77,9 @@ public class TransformNonVolatileFields extends ClassVisitor {
         if (mv != null) {
             mv = new FieldAccessMethodTransformer(mv, nonTransients);
         }
-        if (name.compareTo("<init>") == 0 && descriptor.compareTo("()V") == 0) {
+        if (name.compareTo("<init>") == 0) {
             if (copyConst.contains("$copy0")) {
-                mv = new CallCopyConstructor(mv, className);
+                mv = new CallCopyConstructor(mv, className, "$copy0", "()V" );
             }
         }
         return mv;

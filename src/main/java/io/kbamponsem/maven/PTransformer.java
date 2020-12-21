@@ -1,8 +1,7 @@
 package io.kbamponsem.maven;
 
-import io.kbamponsem.maven.util.FieldDetails;
+import io.kbamponsem.maven.unsedVisitors.AddSizeField;
 import io.kbamponsem.maven.util.Functions;
-import io.kbamponsem.maven.util.MethodDetails;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.filefilter.TrueFileFilter;
 import org.apache.maven.plugin.AbstractMojo;
@@ -15,14 +14,9 @@ import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.apache.maven.project.MavenProject;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassWriter;
-import org.objectweb.asm.tree.FieldNode;
-import org.objectweb.asm.tree.MethodNode;
 
 import java.io.*;
 import java.lang.annotation.Annotation;
-import java.lang.reflect.Field;
-import java.net.URL;
-import java.net.URLClassLoader;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.*;
@@ -142,10 +136,11 @@ public class PTransformer extends AbstractMojo {
 
         CopyClassVisitor copyClassVisitor = new CopyClassVisitor(classWriter, copyClassName, c.getName());
         AddSizeField addSizeField = new AddSizeField(classWriter, size);
-        TransformNonVolatileFields transformNonVolatileFields = new TransformNonVolatileFields(addSizeField, pInterface, classLoader, c, copyClassVisitor.getCopyConstructors());
-
+        AddClassIdField addClassIdField = new AddClassIdField(addSizeField, classLoader, c);
+        TransformNonVolatileFields transformNonVolatileFields = new TransformNonVolatileFields(addClassIdField, pInterface, classLoader, c, copyClassVisitor.getCopyConstructors());
+        AddResurrector resurrector = new AddResurrector(transformNonVolatileFields, c.getName());
         classReader2.accept(copyClassVisitor, 0);
-        classReader1.accept(transformNonVolatileFields, 0);
+        classReader1.accept(resurrector, 0);
         return classWriter.toByteArray();
     }
 

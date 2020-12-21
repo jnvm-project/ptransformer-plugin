@@ -1,4 +1,4 @@
-package io.kbamponsem.maven;
+package io.kbamponsem.maven.unsedVisitors;
 
 import org.objectweb.asm.*;
 public class AddEqualMethod extends ClassVisitor {

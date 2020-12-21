@@ -23,6 +23,11 @@ public class CopyClassVisitor extends ClassVisitor {
 
     @Override
     public MethodVisitor visitMethod(int access, String name, String descriptor, String signature, String[] exceptions) {
+        /*
+            In this visitMethod:
+                * we go through the class and look for all "<init>" methods -> which represent constructors.
+                * And also at the return MethodVisitor, we take ownership from OffHeapObjectHandle and give it to the respective class.
+         */
         if (name.compareTo("<init>") == 0) {
             name = "$copy" + count;
             copyConstructors.add(name);
@@ -74,18 +79,24 @@ public class CopyClassVisitor extends ClassVisitor {
             @Override
             public void visitMethodInsn(int opcode, String owner, String name, String descriptor, boolean isInterface) {
                 String tmp = "";
-                if (opcode == Opcodes.INVOKESPECIAL && owner.equals("java/lang/Object") && name.compareTo("<init>") == 0) {
+                if (opcode == Opcodes.INVOKEVIRTUAL && name.contains("classId")) {
+                    mv.visitVarInsn(Opcodes.ALOAD, 0);
+                    mv.visitFieldInsn(Opcodes.GETFIELD, newOwner, "CLASS_ID", "J");
                 } else {
-                    tmp = "(L" + originalOwner + ";)V";
-                    if (descriptor.compareTo(tmp) == 0) {
-                        descriptor = "(L" + newOwner + ";)V";
-                    } else if (descriptor.compareTo("(L" + originalOwner + ";)" + originalOwner) == 0) {
-                        descriptor = "(L" + newOwner + ";)" + newOwner;
+
+                    if (opcode == Opcodes.INVOKESPECIAL && owner.equals("java/lang/Object") && name.compareTo("<init>") == 0) {
+                    } else {
+                        tmp = "(L" + originalOwner + ";)V"; // original owner -> OffHeapObjectHandle
+                        if (descriptor.compareTo(tmp) == 0) {
+                            descriptor = "(L" + newOwner + ";)V"; // new owner -> the persistent class, with void return
+                        } else if (descriptor.compareTo("(L" + originalOwner + ";)" + originalOwner) == 0) {
+                            descriptor = "(L" + newOwner + ";)" + newOwner; // new owner -> persistent class, with new owner return;
+                        }
+                        if (owner.equals(originalOwner)) {
+                            owner = newOwner;
+                        }
+                        super.visitMethodInsn(opcode, owner, name, descriptor, isInterface);
                     }
-                    if (owner.equals(originalOwner)) {
-                        owner = newOwner;
-                    }
-                    super.visitMethodInsn(opcode, owner, name, descriptor, isInterface);
                 }
             }
 
@@ -103,6 +114,8 @@ public class CopyClassVisitor extends ClassVisitor {
         };
     }
 
-    public Vector<String> getCopyConstructors(){return copyConstructors;}
+    public Vector<String> getCopyConstructors() {
+        return copyConstructors;
+    }
 
 }
