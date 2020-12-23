@@ -8,6 +8,7 @@ io/kbamponsem/maven/PTransformer.class
 io/kbamponsem/maven/unsedVisitors/AddSizeMethod.class
 io/kbamponsem/maven/util/FieldDetails.class
 io/kbamponsem/maven/TransformNonVolatileFields.class
+io/kbamponsem/maven/CopyClassVisitor$2.class
 io/kbamponsem/maven/util/Functions.class
 io/kbamponsem/maven/unsedVisitors/AddSizeField.class
 io/kbamponsem/maven/AddClassIdField.class

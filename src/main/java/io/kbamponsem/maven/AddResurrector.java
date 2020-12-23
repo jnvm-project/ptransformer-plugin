@@ -7,10 +7,12 @@ import org.objectweb.asm.Opcodes;
 public class AddResurrector extends ClassVisitor {
     String className;
     String superName;
-    boolean resurrectorPresent = false;
-    public AddResurrector(ClassVisitor classVisitor, String className) {
+    ClassLoader classLoader;
+
+    public AddResurrector(ClassVisitor classVisitor, String className, ClassLoader classLoader) {
         super(Opcodes.ASM8, classVisitor);
         this.className = className;
+        this.classLoader = classLoader;
     }
 
     @Override
@@ -21,27 +23,30 @@ public class AddResurrector extends ClassVisitor {
 
     @Override
     public MethodVisitor visitMethod(int access, String name, String descriptor, String signature, String[] exceptions) {
-        if(name.equals("<init>") && descriptor.equals("(J)V")){
-            resurrectorPresent = true;
-        }
         return super.visitMethod(access, name, descriptor, signature, exceptions);
     }
 
     @Override
     public void visitEnd() {
-        if(!resurrectorPresent){
-            addCallToResurrector();
-        }
+        addCallToResurrector();
         super.visitEnd();
     }
 
-    void addCallToResurrector(){
-        MethodVisitor mv = cv.visitMethod(Opcodes.ACC_PUBLIC, "<init>", "(J)V", null, null);
-        mv.visitCode();
-        mv.visitVarInsn(Opcodes.ALOAD, 0);
-        mv.visitVarInsn(Opcodes.LLOAD, 1);
-        mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL, className.replace(".", "/"), "$copy1", "(J)V", false);
-        mv.visitInsn(Opcodes.RETURN);
-        mv.visitEnd();
+    void addCallToResurrector() {
+//        try {
+//            Class MemBHandle = this.classLoader.loadClass("eu.telecomsudparis.jnvm.offheap.OffHeap.MemoryBlockHandle");
+//
+//        } catch (ClassNotFoundException e) {
+//            e.printStackTrace();
+//        }
+//        MethodVisitor mv = cv.visitMethod(Opcodes.ACC_PUBLIC, "<init>", "(Leu/telecomsudparis/jnvm/offheap/MemoryBlockHandle;)V", null, null);
+//        mv.visitCode();
+//        mv.visitVarInsn(Opcodes.ALOAD, 0);
+//        mv.visitVarInsn(Opcodes.ALOAD, 1);
+////        mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL, "eu/telecomsudparis/jnvm/offheap/MemoryBlockHandle", "getOffset", "()J", false);
+////        mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL, className.replace(".", "/"), "$copy1", "(J)V", false);
+////        mv.visitInsn(Opcodes.RETURN);
+//        mv.visitMaxs(5,5);
+//        mv.visitEnd();
     }
 }
