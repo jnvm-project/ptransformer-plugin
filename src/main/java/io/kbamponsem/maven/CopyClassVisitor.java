@@ -1,7 +1,10 @@
 package io.kbamponsem.maven;
 
+import io.kbamponsem.maven.util.Functions;
 import org.objectweb.asm.*;
 
+import java.lang.reflect.Method;
+import java.util.Arrays;
 import java.util.Vector;
 
 public class CopyClassVisitor extends ClassVisitor {
@@ -9,11 +12,15 @@ public class CopyClassVisitor extends ClassVisitor {
     String originalOwner;
     String newOwner;
     Vector<String> copyConstructors = new Vector<>();
+    ClassLoader classLoader;
+    Class aClass;
 
-    public CopyClassVisitor(ClassVisitor classVisitor, String originalOwner, String newOwner) {
+    public CopyClassVisitor(ClassVisitor classVisitor, String originalOwner, String newOwner, ClassLoader classLoader, Class aClass) {
         super(Opcodes.ASM8, classVisitor);
         this.originalOwner = originalOwner.replace(".", "/");
         this.newOwner = newOwner.replace(".", "/");
+        this.classLoader = classLoader;
+        this.aClass = aClass;
     }
 
     @Override
@@ -33,8 +40,12 @@ public class CopyClassVisitor extends ClassVisitor {
             copyConstructors.add(name);
             count += 1;
         }
+
         MethodVisitor mv = cv.visitMethod(access, name, descriptor, signature, exceptions);
         if (name.contains("attach")) {
+            mv.visitVarInsn(Opcodes.ALOAD, 0);
+            mv.visitLdcInsn(Functions.getClassID(classLoader, aClass));
+            mv.visitFieldInsn(Opcodes.PUTFIELD, newOwner, "CLASS_ID", "J");
             return new MethodVisitor(super.api, mv) {
                 @Override
                 public void visitCode() {
@@ -43,19 +54,31 @@ public class CopyClassVisitor extends ClassVisitor {
 
                 @Override
                 public void visitFieldInsn(int opcode, String owner, String name, String descriptor) {
-                    if (!owner.equals(newOwner)) {
-                        owner = newOwner;
-                    }
+                    owner = newOwner;
                     super.visitFieldInsn(opcode, owner, name, descriptor);
                 }
 
                 @Override
                 public void visitMethodInsn(int opcode, String owner, String name, String descriptor, boolean isInterface) {
+                    if (owner.equals("eu/telecomsudparis/jnvm/offheap/MemoryBlockHandle")) {
+                    } else owner = newOwner;
                     if (name.contains("classId")) {
+                        System.out.println("Value: " + Functions.getClassID(classLoader, aClass));
+//
                         mv.visitFieldInsn(Opcodes.GETFIELD, newOwner, "CLASS_ID", "J");
+                        mv.visitMaxs(6, 2);
                     } else
                         super.visitMethodInsn(opcode, owner, name, descriptor, isInterface);
+                }
 
+                @Override
+                public void visitMaxs(int maxStack, int maxLocals) {
+                    super.visitMaxs(maxStack, maxLocals);
+                }
+
+                @Override
+                public void visitEnd() {
+                    super.visitEnd();
                 }
             };
         } else {
@@ -127,7 +150,6 @@ public class CopyClassVisitor extends ClassVisitor {
 
                 @Override
                 public void visitEnd() {
-
                     super.visitEnd();
                 }
             };

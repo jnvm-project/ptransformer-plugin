@@ -134,7 +134,7 @@ public class PTransformer extends AbstractMojo {
 
         ClassWriter classWriter = new ClassWriter(0);
 
-        CopyClassVisitor copyClassVisitor = new CopyClassVisitor(classWriter, copyClassName, c.getName());
+        CopyClassVisitor copyClassVisitor = new CopyClassVisitor(classWriter, copyClassName, c.getName(), classLoader, c);
         AddSizeField addSizeField = new AddSizeField(classWriter, size);
         AddClassIdField addClassIdField = new AddClassIdField(addSizeField, classLoader, c);
         TransformNonVolatileFields transformNonVolatileFields = new TransformNonVolatileFields(addClassIdField, pInterface, classLoader, c, copyClassVisitor.getCopyConstructors());

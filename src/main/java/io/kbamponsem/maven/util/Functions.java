@@ -9,6 +9,7 @@ import java.lang.reflect.Method;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
@@ -139,5 +140,26 @@ public class Functions {
                 return current;
         }
         return 0;
+    }
+
+    static public long getClassID(ClassLoader classLoader, Class userClass){
+        try{
+            Class fakeOffHeap = classLoader.loadClass("eu.telecomsudparis.jnvm.offheap.OffHeap");
+            Class fakeKlass = null;
+            for(Class aClass: fakeOffHeap.getClasses()){
+                if(aClass.getName().contains("Klass")){
+                    fakeKlass = aClass;
+                }
+            }
+
+            // after, we have the enum;
+            Arrays.asList(fakeKlass.getMethods()).forEach(System.out::println);
+            Method registerKlass = fakeKlass.getMethod("registerUserKlass", Class.class);
+            long classId = (long) registerKlass.invoke(null, userClass.getClass());
+            return classId;
+        }catch (Exception e){
+
+        }
+        return -1;
     }
 }
