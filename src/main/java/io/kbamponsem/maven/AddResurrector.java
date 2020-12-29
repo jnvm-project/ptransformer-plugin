@@ -3,6 +3,7 @@ package io.kbamponsem.maven;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
+import org.objectweb.asm.tree.MethodNode;
 
 public class AddResurrector extends ClassVisitor {
     String className;
@@ -33,20 +34,16 @@ public class AddResurrector extends ClassVisitor {
     }
 
     void addCallToResurrector() {
-//        try {
-//            Class MemBHandle = this.classLoader.loadClass("eu.telecomsudparis.jnvm.offheap.OffHeap.MemoryBlockHandle");
-//
-//        } catch (ClassNotFoundException e) {
-//            e.printStackTrace();
-//        }
-//        MethodVisitor mv = cv.visitMethod(Opcodes.ACC_PUBLIC, "<init>", "(Leu/telecomsudparis/jnvm/offheap/MemoryBlockHandle;)V", null, null);
-//        mv.visitCode();
-//        mv.visitVarInsn(Opcodes.ALOAD, 0);
-//        mv.visitVarInsn(Opcodes.ALOAD, 1);
-////        mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL, "eu/telecomsudparis/jnvm/offheap/MemoryBlockHandle", "getOffset", "()J", false);
-////        mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL, className.replace(".", "/"), "$copy1", "(J)V", false);
-////        mv.visitInsn(Opcodes.RETURN);
-//        mv.visitMaxs(5,5);
-//        mv.visitEnd();
+        MethodVisitor mv = cv.visitMethod(Opcodes.ACC_PUBLIC, "<init>", "(Leu/telecomsudparis/jnvm/offheap/MemoryBlockHandle;)V", null, null);
+        mv.visitCode();
+        mv.visitVarInsn(Opcodes.ALOAD, 0);
+        mv.visitMethodInsn(Opcodes.INVOKESPECIAL, superName.replace(".", "/"), "<init>", "()V", false);
+        mv.visitVarInsn(Opcodes.ALOAD, 0);
+        mv.visitVarInsn(Opcodes.ALOAD, 1);
+        mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL, "eu/telecomsudparis/jnvm/offheap/MemoryBlockHandle", "getOffset", "()J", false);
+        mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL, className.replace(".", "/"), "$copy1", "(J)V", false);
+        mv.visitInsn(Opcodes.RETURN);
+        mv.visitMaxs(5,5);
+        mv.visitEnd();
     }
 }
