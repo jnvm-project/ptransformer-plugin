@@ -19,18 +19,18 @@ public class AddResurrector extends ClassVisitor {
     @Override
     public void visit(int version, int access, String name, String signature, String superName, String[] interfaces) {
         this.superName = superName;
-        super.visit(version, access, name, signature, superName, interfaces);
+        cv.visit(version, access, name, signature, superName, interfaces);
     }
 
     @Override
     public MethodVisitor visitMethod(int access, String name, String descriptor, String signature, String[] exceptions) {
-        return super.visitMethod(access, name, descriptor, signature, exceptions);
+        return cv.visitMethod(access, name, descriptor, signature, exceptions);
     }
 
     @Override
     public void visitEnd() {
         addCallToResurrector();
-        super.visitEnd();
+        cv.visitEnd();
     }
 
     void addCallToResurrector() {

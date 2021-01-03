@@ -1,13 +1,25 @@
 package io.kbamponsem.maven.util;
 
+import io.kbamponsem.maven.AddClassIdField;
+import io.kbamponsem.maven.AddResurrector;
+import io.kbamponsem.maven.CopyClassVisitor;
+import io.kbamponsem.maven.TransformNonVolatileFields;
+import io.kbamponsem.maven.unsedVisitors.AddSizeField;
 import org.apache.maven.project.MavenProject;
+import org.objectweb.asm.ClassReader;
+import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.Opcodes;
 
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -162,4 +174,92 @@ public class Functions {
         }
         return -1;
     }
+
+    static public int getOpcodeReturnFromDesc(String desc){
+        switch (desc){
+            case "J":
+                return Opcodes.LRETURN;
+            case "D":
+                return Opcodes.DRETURN;
+            case "I":
+            case "B":
+                return Opcodes.IRETURN;
+            case "F":
+                return Opcodes.FRETURN;
+        }
+        return -1;
+    }
+
+    static public byte[] transformClass(String classpath, Class c, String pInterface, MavenProject project, String copyClassName) throws IOException, ClassNotFoundException {
+        ClassLoader classLoader = Functions.getProjectClassLoader(project);
+        long size = Functions.getSizeOfFields(c);
+
+        String s = classpath + c.getName().replace(".", "/") + ".class";
+        String s1 = classpath + copyClassName.replace(".", "/") + ".class";
+        ClassReader classReader1 = new ClassReader(Files.readAllBytes(Paths.get(s).toAbsolutePath()));
+        ClassReader classReader2 = new ClassReader(Files.readAllBytes(Paths.get(s1).toAbsolutePath()));
+
+        ClassWriter classWriter = new ClassWriter(0);
+
+        CopyClassVisitor copyClassVisitor = new CopyClassVisitor(classWriter, copyClassName, c.getName(), classLoader, c);
+        AddSizeField addSizeField = new AddSizeField(classWriter, size);
+        AddClassIdField addClassIdField = new AddClassIdField(addSizeField, classLoader, c);
+        TransformNonVolatileFields transformNonVolatileFields = new TransformNonVolatileFields(addClassIdField, pInterface, classLoader, c, copyClassVisitor.getCopyConstructors());
+        AddResurrector resurrector = new AddResurrector(transformNonVolatileFields, c.getName(), classLoader);
+        classReader2.accept(copyClassVisitor, 0);
+        classReader1.accept(resurrector, 0);
+        return classWriter.toByteArray();
+    }
+
+    static public String transformClassFiles(File file, File parentDirectory) {
+        String fileName = file.getAbsolutePath();
+        String directoryName = parentDirectory.getAbsolutePath();
+
+        fileName = fileName.split(directoryName + "/")[1];
+
+        return changeForwardSlashToDot(removeDotClass(fileName));
+    }
+
+    static public void writeBytes(String classpath, String packageName, String fileName, String extension, byte[] b) {
+        FileOutputStream fileOutputStream = null;
+        File fileWithDir;
+        try {
+            fileWithDir = new File(classpath.concat(packageName));
+
+            Files.createDirectories(fileWithDir.toPath());
+
+            fileOutputStream = new FileOutputStream(classpath + packageName + "/" + fileName + extension);
+            fileOutputStream.write(b);
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                fileOutputStream.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    static public boolean isPersistence(Class c, String persistent) {
+        for (Annotation annotation : c.getDeclaredAnnotations()) {
+            if (annotation.annotationType().getCanonicalName().compareTo(persistent) == 0) {
+                return true;
+            } else continue;
+        }
+        return false;
+    }
+    static String changeForwardSlashToDot(String s) {
+        return s.replace("/", ".");
+    }
+
+    static String removeDotClass(String s) {
+        return s.split(".class")[0];
+    }
+
+//    static String changeFromDotToSlash(String s) {
+//        return s.replace("\\", "/");
+//    }
+
+
 }

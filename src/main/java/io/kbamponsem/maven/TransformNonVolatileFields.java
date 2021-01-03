@@ -47,7 +47,6 @@ public class TransformNonVolatileFields extends ClassVisitor {
         this.signature = signature;
         this.superName = superName;
         this.interfaces = interfaces;
-        System.out.println("SuperClass: " + superName);
 
         String[] _interfaces = Arrays.copyOf(this.interfaces, this.interfaces.length + 1);
         _interfaces[this.interfaces.length] = this.pInterface.replace(".", "/");
@@ -77,9 +76,9 @@ public class TransformNonVolatileFields extends ClassVisitor {
         if (mv != null) {
             mv = new FieldAccessMethodTransformer(mv, nonTransients);
         }
-        if (name.compareTo("<init>") == 0) {
+        if (name.compareTo("<init>") == 0 && !descriptor.contains("(Leu/telecomsudparis/jnvm/offheap/MemoryBlockHandle;)")) {
             if (copyConst.contains("$copy0")) {
-                mv = new CallCopyConstructor(mv, className, "$copy0", "()V" );
+                mv = new CallCopyConstructor(mv, className, "$copy0", "()V");
             }
         }
         return mv;
@@ -109,19 +108,24 @@ public class TransformNonVolatileFields extends ClassVisitor {
     void createSetter(String name, String descriptor, ClassVisitor cv, long offset) {
         try {
             Class pInterfaceClass = this.classLoader.loadClass(this.pInterface);
+
             Method[] superClassMethods = pInterfaceClass.getDeclaredMethods();
+
             String methodName = Functions.getMethodFromName(superClassMethods, Functions.getTypeFromDesc(descriptor), getSetType[1]).getName();
-            name = Functions.capitalize(name);
-            MethodVisitor mv =
-                    cv.visitMethod(Opcodes.ACC_PUBLIC, "$set" + name, "(" + descriptor + ")V", null, null);
-            mv.visitCode();
-            mv.visitVarInsn(Opcodes.ALOAD, 0);
-            mv.visitLdcInsn(offset);
-            mv.visitVarInsn(Functions.getDescOpcode(descriptor), 1);
-            mv.visitMethodInsn(Opcodes.INVOKEINTERFACE, pInterface.replace(".", "/"), methodName, "(J" + descriptor + ")V", true);
-            mv.visitInsn(Opcodes.RETURN);
-            mv.visitMaxs(5, 5);
-            mv.visitEnd();
+
+            if (!methodName.equals("")) {
+                name = Functions.capitalize(name);
+                MethodVisitor mv =
+                        cv.visitMethod(Opcodes.ACC_PUBLIC, "$set" + name, "(" + descriptor + ")V", null, null);
+                mv.visitCode();
+                mv.visitVarInsn(Opcodes.ALOAD, 0);
+                mv.visitLdcInsn(offset);
+                mv.visitVarInsn(Functions.getDescOpcode(descriptor), 1);
+                mv.visitMethodInsn(Opcodes.INVOKEINTERFACE, pInterface.replace(".", "/"), methodName, "(J" + descriptor + ")V", true);
+                mv.visitInsn(Opcodes.RETURN);
+                mv.visitMaxs(5, 5);
+                mv.visitEnd();
+            }
         } catch (Exception e) {
 
         }
@@ -137,38 +141,30 @@ public class TransformNonVolatileFields extends ClassVisitor {
      */
     void createGetter(String name, String descriptor, ClassVisitor cv, long offset) {
         try {
+            Class pInterfaceClass = this.classLoader.loadClass(this.pInterface); // load interface class
 
-            Class pInterfaceClass = this.classLoader.loadClass(this.pInterface);
-            Method[] superClassMethods = pInterfaceClass.getDeclaredMethods();
-            String methodName = Functions.getMethodFromName(superClassMethods, Functions.getTypeFromDesc(descriptor), getSetType[0]).getName();
+            Method[] pInterfaceClassDeclaredMethods = pInterfaceClass.getDeclaredMethods(); // get all methods with the interface class
+
+            String methodName = Functions.getMethodFromName(pInterfaceClassDeclaredMethods, Functions.getTypeFromDesc(descriptor), getSetType[0]).getName();
+
             name = Functions.capitalize(name);
-            MethodVisitor mv =
-                    cv.visitMethod(Opcodes.ACC_PUBLIC, "$get" + name, "()" + descriptor, null, null);
-            mv.visitCode();
-            mv.visitVarInsn(Opcodes.ALOAD, 0);
-            mv.visitLdcInsn(offset);
-            mv.visitMethodInsn(Opcodes.INVOKEINTERFACE, pInterface.replace(".", "/"), methodName, "(J)" + descriptor, true);
-            mv.visitInsn(Opcodes.IRETURN);
-            mv.visitMaxs(5, 5);
-            mv.visitEnd();
+            if (!methodName.equals("")) {
+                MethodVisitor mv =
+                        cv.visitMethod(Opcodes.ACC_PUBLIC, "$get" + name, "()" + descriptor, null, null);
+                mv.visitCode();
+                mv.visitVarInsn(Opcodes.ALOAD, 0);
+                mv.visitLdcInsn(offset);
+                mv.visitMethodInsn(Opcodes.INVOKEINTERFACE, pInterface.replace(".", "/"), methodName, "(J)" + descriptor, true);
+                mv.visitInsn(Functions.getOpcodeReturnFromDesc(descriptor));
+                mv.visitMaxs(5, 5);
+                mv.visitEnd();
+            }
+
 
         } catch (Exception e) {
 
         }
     }
 
-//    void callCopyConstructor(ClassVisitor cv){
-//        MethodVisitor mv = cv.visitMethod(Opcodes.ACC_PUBLIC, "<init>", "()V", null, null);
-//        if (name.compareTo("<init>") == 0 && descriptor.compareTo("()V") == 0) {
-//            if (copyConst.contains("$copy0")) {
-//                mv.visitCode();
-//                mv.visitVarInsn(Opcodes.ALOAD, 0);
-//                mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL, className.replace(".", "/"), "$copy0", "()V", false);
-//                mv.visitInsn(Opcodes.RETURN);
-//                mv.visitMaxs(4,4);
-//                mv.visitEnd();
-//            }
-//        }
-//    }
 
 }
