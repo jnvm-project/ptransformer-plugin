@@ -13,6 +13,7 @@
 /home/amponsem/Projects/jnvm/ptransformer-plugin/src/main/java/io/kbamponsem/maven/CleanPersistent.java
 /home/amponsem/Projects/jnvm/ptransformer-plugin/src/main/java/io/kbamponsem/maven/util/FieldDetails.java
 /home/amponsem/Projects/jnvm/ptransformer-plugin/src/main/java/io/kbamponsem/maven/unsedVisitors/AddSizeMethod.java
+/home/amponsem/Projects/jnvm/ptransformer-plugin/src/main/java/io/kbamponsem/maven/util/NVMAwarePersistentClasses.java
 /home/amponsem/Projects/jnvm/ptransformer-plugin/src/main/java/io/kbamponsem/maven/unsedVisitors/AddSizeField.java
 /home/amponsem/Projects/jnvm/ptransformer-plugin/src/main/java/io/kbamponsem/maven/unsedVisitors/AddEqualMethod.java
 /home/amponsem/Projects/jnvm/ptransformer-plugin/src/main/java/io/kbamponsem/maven/CopyMethodVisitor.java

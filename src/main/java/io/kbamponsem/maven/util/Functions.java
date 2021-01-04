@@ -171,8 +171,9 @@ public class Functions {
             return classId;
         }catch (Exception e){
 
+        }finally {
+            return -1;
         }
-        return -1;
     }
 
     static public int getOpcodeReturnFromDesc(String desc){
@@ -190,7 +191,7 @@ public class Functions {
         return -1;
     }
 
-    static public byte[] transformClass(String classpath, Class c, String pInterface, MavenProject project, String copyClassName) throws IOException, ClassNotFoundException {
+        static public byte[] transformClass(String classpath, Class c, String pInterface, MavenProject project, String copyClassName) throws IOException, ClassNotFoundException {
         ClassLoader classLoader = Functions.getProjectClassLoader(project);
         long size = Functions.getSizeOfFields(c);
 
