@@ -1,9 +1,6 @@
 package io.kbamponsem.maven.util;
 
-import io.kbamponsem.maven.AddClassIdField;
-import io.kbamponsem.maven.AddResurrector;
-import io.kbamponsem.maven.CopyClassVisitor;
-import io.kbamponsem.maven.TransformNonVolatileFields;
+import io.kbamponsem.maven.*;
 import io.kbamponsem.maven.unsedVisitors.AddSizeField;
 import org.apache.maven.project.MavenProject;
 import org.objectweb.asm.ClassReader;
@@ -21,8 +18,6 @@ import java.net.URLClassLoader;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
 
 public class Functions {
@@ -74,15 +69,15 @@ public class Functions {
 
     static public Method getMethodFromName(Method[] methods, String name, String type) {
         for (Method m : methods) {
-            if (m.getName().contains(type+capitalize(name))) {
+            if (m.getName().contains(type + capitalize(name))) {
                 return m;
             }
         }
         return null;
     }
 
-    static public String getTypeFromDesc(String desc){
-        switch (desc){
+    static public String getTypeFromDesc(String desc) {
+        switch (desc) {
             case "I":
                 return "int";
             case "B":
@@ -128,8 +123,8 @@ public class Functions {
         return size;
     }
 
-    static public int getFieldOffset(int current, String desc){
-        switch (getTypeFromDesc(desc)){
+    static public int getFieldOffset(int current, String desc) {
+        switch (getTypeFromDesc(desc)) {
             case "int":
                 current += Integer.BYTES;
                 return current;
@@ -154,12 +149,12 @@ public class Functions {
         return 0;
     }
 
-    static public long getClassID(ClassLoader classLoader, Class userClass){
-        try{
+    static public long getClassID(ClassLoader classLoader, Class userClass) {
+        try {
             Class fakeOffHeap = classLoader.loadClass("eu.telecomsudparis.jnvm.offheap.OffHeap");
             Class fakeKlass = null;
-            for(Class aClass: fakeOffHeap.getClasses()){
-                if(aClass.getName().contains("Klass")){
+            for (Class aClass : fakeOffHeap.getClasses()) {
+                if (aClass.getName().contains("Klass")) {
                     fakeKlass = aClass;
                 }
             }
@@ -168,15 +163,15 @@ public class Functions {
             Method registerKlass = fakeKlass.getMethod("registerUserKlass", Class.class);
             long classId = (long) registerKlass.invoke(null, userClass.getClass());
             return classId;
-        }catch (Exception e){
+        } catch (Exception e) {
 
-        }finally {
+        } finally {
             return -1;
         }
     }
 
-    static public int getOpcodeReturnFromDesc(String desc){
-        switch (desc){
+    static public int getOpcodeReturnFromDesc(String desc) {
+        switch (desc) {
             case "J":
                 return Opcodes.LRETURN;
             case "D":
@@ -190,7 +185,7 @@ public class Functions {
         return -1;
     }
 
-        static public byte[] transformClass(String classpath, Class c, String pInterface, MavenProject project, String copyClassName) throws IOException, ClassNotFoundException {
+    static public byte[] transformClass(String classpath, Class c, String pInterface, MavenProject project, String copyClassName) throws IOException, ClassNotFoundException {
         ClassLoader classLoader = Functions.getProjectClassLoader(project);
         long size = Functions.getSizeOfFields(c);
 
@@ -201,12 +196,13 @@ public class Functions {
 
         ClassWriter classWriter = new ClassWriter(0);
 
-        CopyClassVisitor copyClassVisitor = new CopyClassVisitor(classWriter, copyClassName, c.getName(), classLoader, c);
         AddSizeField addSizeField = new AddSizeField(classWriter, size);
+        CopyClassVisitor copyClassVisitor = new CopyClassVisitor(classWriter, copyClassName, c.getName(), classLoader, c);
         AddClassIdField addClassIdField = new AddClassIdField(addSizeField, classLoader, c);
         TransformNonVolatileFields transformNonVolatileFields = new TransformNonVolatileFields(addClassIdField, pInterface, classLoader, c, copyClassVisitor.getCopyConstructors());
         AddResurrector resurrector = new AddResurrector(transformNonVolatileFields, c.getName(), classLoader);
-        classReader2.accept(copyClassVisitor, 0);
+        RemoveSizeMethod removeSizeMethod = new RemoveSizeMethod(copyClassVisitor);
+        classReader2.accept(removeSizeMethod, 0);
         classReader1.accept(resurrector, 0);
         return classWriter.toByteArray();
     }
@@ -249,6 +245,7 @@ public class Functions {
         }
         return false;
     }
+
     static String changeForwardSlashToDot(String s) {
         return s.replace("/", ".");
     }

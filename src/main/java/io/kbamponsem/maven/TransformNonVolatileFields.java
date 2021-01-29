@@ -57,8 +57,9 @@ public class TransformNonVolatileFields extends ClassVisitor {
     public FieldVisitor visitField(int access, String name, String descriptor, String signature, Object value) {
         if (access - Opcodes.ACC_TRANSIENT < 0) {
             nonTransientFields.put(name, descriptor);
-        }
-        return super.visitField(access, name, descriptor, signature, value);
+            return null;
+        } else
+            return super.visitField(access, name, descriptor, signature, value);
     }
 
 
@@ -166,5 +167,8 @@ public class TransformNonVolatileFields extends ClassVisitor {
         }
     }
 
+    public HashMap<String, String> getNonTransientFields() {
+        return this.nonTransientFields;
+    }
 
 }
