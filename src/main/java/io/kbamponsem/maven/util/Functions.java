@@ -196,7 +196,7 @@ public class Functions {
 
         ClassWriter classWriter = new ClassWriter(0);
 
-        AddSizeField addSizeField = new AddSizeField(classWriter, size);
+        AddSizeField addSizeField = new AddSizeField(classWriter, size, c.getName().replace(".","/"));
         CopyClassVisitor copyClassVisitor = new CopyClassVisitor(classWriter, copyClassName, c.getName(), classLoader, c);
         AddClassIdField addClassIdField = new AddClassIdField(addSizeField, classLoader, c);
         TransformNonVolatileFields transformNonVolatileFields = new TransformNonVolatileFields(addClassIdField, pInterface, classLoader, c, copyClassVisitor.getCopyConstructors());

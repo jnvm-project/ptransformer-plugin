@@ -7,9 +7,12 @@ import org.objectweb.asm.Opcodes;
 
 public class AddSizeField extends ClassVisitor {
     long SIZE;
-    public AddSizeField(ClassVisitor classVisitor, long SIZE) {
+    String owner;
+
+    public AddSizeField(ClassVisitor classVisitor, long SIZE, String owner) {
         super(Opcodes.ASM8, classVisitor);
         this.SIZE = SIZE;
+        this.owner = owner;
     }
 
     @Override
@@ -17,9 +20,11 @@ public class AddSizeField extends ClassVisitor {
         cv.visitField(Opcodes.ACC_FINAL | Opcodes.ACC_PRIVATE | Opcodes.ACC_STATIC, "SIZE", "J", null, this.SIZE);
         MethodVisitor mv = cv.visitMethod(Opcodes.ACC_PUBLIC, "size", "()J", null, null);
         mv.visitCode();
-        mv.visitLdcInsn(this.SIZE);
+//        mv.visitLdcInsn(this.SIZE);
+//        mv.visitInsn(Opcodes.LRETURN);
+        mv.visitFieldInsn(Opcodes.GETSTATIC, this.owner, "SIZE", "J");
         mv.visitInsn(Opcodes.LRETURN);
-        mv.visitMaxs(2,2);
+        mv.visitMaxs(2, 2);
         mv.visitEnd();
         super.visitEnd();
     }
