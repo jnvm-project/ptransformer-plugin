@@ -1,4 +1,4 @@
-package io.kbamponsem.maven;
+package io.kbamponsem.maven.unsedVisitors;
 
 import io.kbamponsem.maven.util.FieldDetails;
 import io.kbamponsem.maven.util.MethodDetails;

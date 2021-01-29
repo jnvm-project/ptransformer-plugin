@@ -37,6 +37,9 @@ public class PTransformer extends AbstractMojo {
     public void execute() throws MojoExecutionException, MojoFailureException {
         Vector<String> files;
         HashMap<Class, Boolean> persistentClasses;
+
+        long startTime = System.currentTimeMillis();
+
         try {
 
             ClassLoader classLoader = Functions.getProjectClassLoader(project);
@@ -50,6 +53,10 @@ public class PTransformer extends AbstractMojo {
         } catch (Exception e) {
             e.printStackTrace();
         }
+
+        long stopTime = System.currentTimeMillis();
+
+        System.out.println("Total Plugin exec time: " + (stopTime - startTime) +" ms");
     }
 
 

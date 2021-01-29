@@ -165,7 +165,6 @@ public class Functions {
             }
 
             // after, we have the enum;
-            Arrays.asList(fakeKlass.getMethods()).forEach(System.out::println);
             Method registerKlass = fakeKlass.getMethod("registerUserKlass", Class.class);
             long classId = (long) registerKlass.invoke(null, userClass.getClass());
             return classId;
