@@ -1,4 +1,5 @@
 io/kbamponsem/maven/unsedVisitors/AddCopyData.class
+io/kbamponsem/maven/util/NVMAwarePersistentClasses.class
 io/kbamponsem/maven/unsedVisitors/AddSuperCall.class
 io/kbamponsem/maven/unsedVisitors/AddSizeMethod.class
 io/kbamponsem/maven/TransformNonVolatileFields.class

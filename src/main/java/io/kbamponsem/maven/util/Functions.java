@@ -19,6 +19,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 public class Functions {
     static public String capitalize(String s) {
@@ -190,9 +191,10 @@ public class Functions {
         long size = Functions.getSizeOfFields(c);
 
         String s = classpath + c.getName().replace(".", "/") + ".class";
-        String s1 = classpath + copyClassName.replace(".", "/") + ".class";
+        String s1 = copyClassName.replace(".", "/") + ".class";
         ClassReader classReader1 = new ClassReader(Files.readAllBytes(Paths.get(s).toAbsolutePath()));
-        ClassReader classReader2 = new ClassReader(Files.readAllBytes(Paths.get(s1).toAbsolutePath()));
+        assert classLoader != null;
+        ClassReader classReader2 = new ClassReader(Objects.requireNonNull(classLoader.getResourceAsStream(s1)));
 
         ClassWriter classWriter = new ClassWriter(0);
 
@@ -220,11 +222,11 @@ public class Functions {
         FileOutputStream fileOutputStream = null;
         File fileWithDir;
         try {
-            fileWithDir = new File(classpath.concat(packageName));
+            fileWithDir = new File(classpath.concat(packageName.replace(".", "/")));
 
             Files.createDirectories(fileWithDir.toPath());
 
-            fileOutputStream = new FileOutputStream(classpath + packageName + "/" + fileName + extension);
+            fileOutputStream = new FileOutputStream(classpath + packageName.replace(".","/") + "/" + fileName + extension);
             fileOutputStream.write(b);
         } catch (IOException e) {
             e.printStackTrace();
