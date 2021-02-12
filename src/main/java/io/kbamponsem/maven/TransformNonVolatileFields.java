@@ -29,14 +29,21 @@ public class TransformNonVolatileFields extends ClassVisitor {
     String className;
     Class clazz;
     Vector<String> copyConst;
+    String persistentAnnotation;
 
-    public TransformNonVolatileFields(ClassVisitor classVisitor, String pInterface, ClassLoader classLoader, Class c, Vector<String> copyConst) {
+    public TransformNonVolatileFields(ClassVisitor classVisitor,
+                                      String pInterface,
+                                      ClassLoader classLoader,
+                                      Class c,
+                                      Vector<String> copyConst,
+                                      String persistentAnnotation) {
         super(Opcodes.ASM8, classVisitor);
         this.pInterface = pInterface;
         this.classLoader = classLoader;
         this.className = c.getName();
         this.clazz = c;
         this.copyConst = copyConst;
+        this.persistentAnnotation = persistentAnnotation;
     }
 
     @Override
@@ -51,6 +58,16 @@ public class TransformNonVolatileFields extends ClassVisitor {
         String[] _interfaces = Arrays.copyOf(this.interfaces, this.interfaces.length + 1);
         _interfaces[this.interfaces.length] = this.pInterface.replace(".", "/");
         super.visit(version, access, name, signature, superName, _interfaces);
+    }
+
+    @Override
+    public AnnotationVisitor visitAnnotation(String descriptor, boolean visible) {
+        System.out.println(descriptor);
+        System.out.println(this.persistentAnnotation);
+        this.persistentAnnotation = "L"+this.persistentAnnotation.replace(".", "/")+";";
+        if(descriptor.equals(this.persistentAnnotation))
+            return null;
+        return super.visitAnnotation(descriptor, visible);
     }
 
     @Override
@@ -114,6 +131,7 @@ public class TransformNonVolatileFields extends ClassVisitor {
 
             String methodName = Functions.getMethodFromName(superClassMethods, Functions.getTypeFromDesc(descriptor), getSetType[1]).getName();
 
+            System.out.println(methodName);
             if (!methodName.equals("")) {
                 name = Functions.capitalize(name);
                 MethodVisitor mv =

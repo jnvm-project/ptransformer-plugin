@@ -48,7 +48,7 @@ public class PTransformer extends AbstractMojo {
 
             persistentClasses = PersistentClasses.getPersistentClasses(files, classLoader, persistentAnnotation);
 
-            NVMAwarePersistentClasses.getNVMAwarePersistentClasses(persistentClasses, output, pInterface, project, copyClass);
+            NVMAwarePersistentClasses.getNVMAwarePersistentClasses(persistentClasses, output, pInterface, project, copyClass, persistentAnnotation);
 
         } catch (Exception e) {
             e.printStackTrace();

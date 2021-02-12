@@ -74,6 +74,11 @@ public class Functions {
                 return m;
             }
         }
+
+        for(Method m : methods) {
+            if (m.getName().contains("Long")) return m;
+        }
+
         return null;
     }
 
@@ -186,7 +191,7 @@ public class Functions {
         return -1;
     }
 
-    static public byte[] transformClass(String classpath, Class c, String pInterface, MavenProject project, String copyClassName) throws IOException, ClassNotFoundException {
+    static public byte[] transformClass(String classpath, Class c, String pInterface, MavenProject project, String copyClassName, String persistentAnnotation) throws IOException, ClassNotFoundException {
         ClassLoader classLoader = Functions.getProjectClassLoader(project);
         long size = Functions.getSizeOfFields(c);
 
@@ -201,7 +206,8 @@ public class Functions {
         AddSizeField addSizeField = new AddSizeField(classWriter, size, c.getName().replace(".","/"));
         CopyClassVisitor copyClassVisitor = new CopyClassVisitor(classWriter, copyClassName, c.getName(), classLoader, c);
         AddClassIdField addClassIdField = new AddClassIdField(addSizeField, classLoader, c);
-        TransformNonVolatileFields transformNonVolatileFields = new TransformNonVolatileFields(addClassIdField, pInterface, classLoader, c, copyClassVisitor.getCopyConstructors());
+        TransformNonVolatileFields transformNonVolatileFields = new TransformNonVolatileFields(
+                addClassIdField, pInterface, classLoader, c, copyClassVisitor.getCopyConstructors(), persistentAnnotation);
         AddResurrector resurrector = new AddResurrector(transformNonVolatileFields, c.getName(), classLoader);
         RemoveSizeMethod removeSizeMethod = new RemoveSizeMethod(copyClassVisitor);
         classReader2.accept(removeSizeMethod, 0);
