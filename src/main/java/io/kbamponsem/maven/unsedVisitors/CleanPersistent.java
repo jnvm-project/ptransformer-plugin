@@ -1,4 +1,4 @@
-package io.kbamponsem.maven;
+package io.kbamponsem.maven.unsedVisitors;
 
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;

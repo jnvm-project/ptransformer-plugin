@@ -63,7 +63,6 @@ public class CopyClassVisitor extends ClassVisitor {
                     if (owner.equals("eu/telecomsudparis/jnvm/offheap/MemoryBlockHandle")) {
                     } else owner = newOwner;
                     if (name.contains("classId")) {
-                        System.out.println("Value: " + Functions.getClassID(classLoader, aClass));
 //
                         mv.visitFieldInsn(Opcodes.GETFIELD, newOwner, "CLASS_ID", "J");
                         mv.visitMaxs(6, 2);

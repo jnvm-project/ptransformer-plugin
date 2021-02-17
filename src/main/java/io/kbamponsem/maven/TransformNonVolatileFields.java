@@ -29,14 +29,21 @@ public class TransformNonVolatileFields extends ClassVisitor {
     String className;
     Class clazz;
     Vector<String> copyConst;
+    String persistentAnnotation;
 
-    public TransformNonVolatileFields(ClassVisitor classVisitor, String pInterface, ClassLoader classLoader, Class c, Vector<String> copyConst) {
+    public TransformNonVolatileFields(ClassVisitor classVisitor,
+                                      String pInterface,
+                                      ClassLoader classLoader,
+                                      Class c,
+                                      Vector<String> copyConst,
+                                      String persistentAnnotation) {
         super(Opcodes.ASM8, classVisitor);
         this.pInterface = pInterface;
         this.classLoader = classLoader;
         this.className = c.getName();
         this.clazz = c;
         this.copyConst = copyConst;
+        this.persistentAnnotation = persistentAnnotation;
     }
 
     @Override
@@ -54,11 +61,22 @@ public class TransformNonVolatileFields extends ClassVisitor {
     }
 
     @Override
+    public AnnotationVisitor visitAnnotation(String descriptor, boolean visible) {
+        System.out.println(descriptor);
+        System.out.println(this.persistentAnnotation);
+        this.persistentAnnotation = "L"+this.persistentAnnotation.replace(".", "/")+";";
+        if(descriptor.equals(this.persistentAnnotation))
+            return null;
+        return super.visitAnnotation(descriptor, visible);
+    }
+
+    @Override
     public FieldVisitor visitField(int access, String name, String descriptor, String signature, Object value) {
         if (access - Opcodes.ACC_TRANSIENT < 0) {
             nonTransientFields.put(name, descriptor);
-        }
-        return super.visitField(access, name, descriptor, signature, value);
+            return null;
+        } else
+            return super.visitField(access, name, descriptor, signature, value);
     }
 
 
@@ -113,6 +131,7 @@ public class TransformNonVolatileFields extends ClassVisitor {
 
             String methodName = Functions.getMethodFromName(superClassMethods, Functions.getTypeFromDesc(descriptor), getSetType[1]).getName();
 
+            System.out.println(methodName);
             if (!methodName.equals("")) {
                 name = Functions.capitalize(name);
                 MethodVisitor mv =
@@ -166,5 +185,8 @@ public class TransformNonVolatileFields extends ClassVisitor {
         }
     }
 
+    public HashMap<String, String> getNonTransientFields() {
+        return this.nonTransientFields;
+    }
 
 }

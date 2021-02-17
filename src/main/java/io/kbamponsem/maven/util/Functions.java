@@ -1,9 +1,6 @@
 package io.kbamponsem.maven.util;
 
-import io.kbamponsem.maven.AddClassIdField;
-import io.kbamponsem.maven.AddResurrector;
-import io.kbamponsem.maven.CopyClassVisitor;
-import io.kbamponsem.maven.TransformNonVolatileFields;
+import io.kbamponsem.maven.*;
 import io.kbamponsem.maven.unsedVisitors.AddSizeField;
 import org.apache.maven.project.MavenProject;
 import org.objectweb.asm.ClassReader;
@@ -21,9 +18,8 @@ import java.net.URLClassLoader;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
+import java.util.Objects;
 
 public class Functions {
     static public String capitalize(String s) {
@@ -74,15 +70,20 @@ public class Functions {
 
     static public Method getMethodFromName(Method[] methods, String name, String type) {
         for (Method m : methods) {
-            if (m.getName().contains(type+capitalize(name))) {
+            if (m.getName().contains(type + capitalize(name))) {
                 return m;
             }
         }
+
+        for(Method m : methods) {
+            if (m.getName().contains("Long")) return m;
+        }
+
         return null;
     }
 
-    static public String getTypeFromDesc(String desc){
-        switch (desc){
+    static public String getTypeFromDesc(String desc) {
+        switch (desc) {
             case "I":
                 return "int";
             case "B":
@@ -128,8 +129,8 @@ public class Functions {
         return size;
     }
 
-    static public int getFieldOffset(int current, String desc){
-        switch (getTypeFromDesc(desc)){
+    static public int getFieldOffset(int current, String desc) {
+        switch (getTypeFromDesc(desc)) {
             case "int":
                 current += Integer.BYTES;
                 return current;
@@ -154,29 +155,29 @@ public class Functions {
         return 0;
     }
 
-    static public long getClassID(ClassLoader classLoader, Class userClass){
-        try{
+    static public long getClassID(ClassLoader classLoader, Class userClass) {
+        try {
             Class fakeOffHeap = classLoader.loadClass("eu.telecomsudparis.jnvm.offheap.OffHeap");
             Class fakeKlass = null;
-            for(Class aClass: fakeOffHeap.getClasses()){
-                if(aClass.getName().contains("Klass")){
+            for (Class aClass : fakeOffHeap.getClasses()) {
+                if (aClass.getName().contains("Klass")) {
                     fakeKlass = aClass;
                 }
             }
 
             // after, we have the enum;
-            Arrays.asList(fakeKlass.getMethods()).forEach(System.out::println);
             Method registerKlass = fakeKlass.getMethod("registerUserKlass", Class.class);
             long classId = (long) registerKlass.invoke(null, userClass.getClass());
             return classId;
-        }catch (Exception e){
+        } catch (Exception e) {
 
+        } finally {
+            return -1;
         }
-        return -1;
     }
 
-    static public int getOpcodeReturnFromDesc(String desc){
-        switch (desc){
+    static public int getOpcodeReturnFromDesc(String desc) {
+        switch (desc) {
             case "J":
                 return Opcodes.LRETURN;
             case "D":
@@ -190,23 +191,26 @@ public class Functions {
         return -1;
     }
 
-    static public byte[] transformClass(String classpath, Class c, String pInterface, MavenProject project, String copyClassName) throws IOException, ClassNotFoundException {
+    static public byte[] transformClass(String classpath, Class c, String pInterface, MavenProject project, String copyClassName, String persistentAnnotation) throws IOException, ClassNotFoundException {
         ClassLoader classLoader = Functions.getProjectClassLoader(project);
         long size = Functions.getSizeOfFields(c);
 
         String s = classpath + c.getName().replace(".", "/") + ".class";
-        String s1 = classpath + copyClassName.replace(".", "/") + ".class";
+        String s1 = copyClassName.replace(".", "/") + ".class";
         ClassReader classReader1 = new ClassReader(Files.readAllBytes(Paths.get(s).toAbsolutePath()));
-        ClassReader classReader2 = new ClassReader(Files.readAllBytes(Paths.get(s1).toAbsolutePath()));
+        assert classLoader != null;
+        ClassReader classReader2 = new ClassReader(Objects.requireNonNull(classLoader.getResourceAsStream(s1)));
 
         ClassWriter classWriter = new ClassWriter(0);
 
+        AddSizeField addSizeField = new AddSizeField(classWriter, size, c.getName().replace(".","/"));
         CopyClassVisitor copyClassVisitor = new CopyClassVisitor(classWriter, copyClassName, c.getName(), classLoader, c);
-        AddSizeField addSizeField = new AddSizeField(classWriter, size);
         AddClassIdField addClassIdField = new AddClassIdField(addSizeField, classLoader, c);
-        TransformNonVolatileFields transformNonVolatileFields = new TransformNonVolatileFields(addClassIdField, pInterface, classLoader, c, copyClassVisitor.getCopyConstructors());
+        TransformNonVolatileFields transformNonVolatileFields = new TransformNonVolatileFields(
+                addClassIdField, pInterface, classLoader, c, copyClassVisitor.getCopyConstructors(), persistentAnnotation);
         AddResurrector resurrector = new AddResurrector(transformNonVolatileFields, c.getName(), classLoader);
-        classReader2.accept(copyClassVisitor, 0);
+        RemoveSizeMethod removeSizeMethod = new RemoveSizeMethod(copyClassVisitor);
+        classReader2.accept(removeSizeMethod, 0);
         classReader1.accept(resurrector, 0);
         return classWriter.toByteArray();
     }
@@ -224,11 +228,11 @@ public class Functions {
         FileOutputStream fileOutputStream = null;
         File fileWithDir;
         try {
-            fileWithDir = new File(classpath.concat(packageName));
+            fileWithDir = new File(classpath.concat(packageName.replace(".", "/")));
 
             Files.createDirectories(fileWithDir.toPath());
 
-            fileOutputStream = new FileOutputStream(classpath + packageName + "/" + fileName + extension);
+            fileOutputStream = new FileOutputStream(classpath + packageName.replace(".","/") + "/" + fileName + extension);
             fileOutputStream.write(b);
         } catch (IOException e) {
             e.printStackTrace();
@@ -249,6 +253,7 @@ public class Functions {
         }
         return false;
     }
+
     static String changeForwardSlashToDot(String s) {
         return s.replace("/", ".");
     }
